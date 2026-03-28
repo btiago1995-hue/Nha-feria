@@ -49,7 +49,7 @@ const ManagerDashboard = () => {
     try {
       const { data: pendingReqs, error: reqError } = await supabase
         .from('leave_requests')
-        .select('*, profiles(full_name, avatar_url)')
+        .select('*, profiles!leave_requests_user_id_fkey(full_name, avatar_url)')
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
 
@@ -75,7 +75,7 @@ const ManagerDashboard = () => {
 
       const { data: approvedReqs, error: approvedError } = await supabase
         .from('leave_requests')
-        .select('*, profiles(full_name)')
+        .select('*, profiles!leave_requests_user_id_fkey(full_name)')
         .eq('status', 'approved');
 
       if (approvedError) throw approvedError;

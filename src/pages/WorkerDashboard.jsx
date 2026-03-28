@@ -86,7 +86,7 @@ const WorkerDashboard = () => {
       // 3. Team absences (all approved requests from colleagues)
       const { data: teamReqs } = await supabase
         .from('leave_requests')
-        .select('start_date, end_date, profiles(full_name)')
+        .select('start_date, end_date, profiles!leave_requests_user_id_fkey(full_name)')
         .eq('status', 'approved')
         .neq('user_id', profile.id);
 
