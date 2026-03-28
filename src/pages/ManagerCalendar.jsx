@@ -18,6 +18,7 @@ const ManagerCalendar = () => {
   const [offToday, setOffToday]     = useState(0);
   const [nextLeave, setNextLeave]   = useState(null);
   const [loading, setLoading]       = useState(true);
+  const [viewMode, setViewMode]     = useState('annual');
 
   useEffect(() => { fetchData(); }, []);
 
@@ -133,9 +134,19 @@ const ManagerCalendar = () => {
             </div>
           </div>
           <div className="flex bg-bg p-1 rounded-lg border border-border">
-            <button className="px-4 py-1.5 text-xs font-bold bg-white text-primary shadow-sm rounded-md transition-all">{m('monthly')}</button>
-            <button className="px-4 py-1.5 text-xs font-bold text-text-muted hover:text-text transition-all">{m('quarterly')}</button>
-            <button className="px-4 py-1.5 text-xs font-bold text-text-muted hover:text-text transition-all">{m('annual')}</button>
+            {[['monthly', m('monthly')], ['quarterly', m('quarterly')], ['annual', m('annual')]].map(([mode, label]) => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
+                  viewMode === mode
+                    ? 'bg-white text-primary shadow-sm'
+                    : 'text-text-muted hover:text-text'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -145,7 +156,7 @@ const ManagerCalendar = () => {
             A carregar mapa…
           </div>
         ) : (
-          <GanttChart data={ganttData} />
+          <GanttChart data={ganttData} viewMode={viewMode} />
         )}
 
         <div className="mt-8 p-4 bg-slate-50 border border-border rounded-xl">
