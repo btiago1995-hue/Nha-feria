@@ -97,32 +97,36 @@ const ManagerDashboard = () => {
 
   const handleApprove = async (id) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('leave_requests')
         .update({ status: 'approved', approved_by: profile.id })
-        .eq('id', id);
+        .eq('id', id)
+        .select();
 
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error('Sem permissão para aprovar pedidos.');
       setRequests(requests.filter(r => r.id !== id));
       fetchManagerData();
       alert('Pedido aprovado com sucesso!');
     } catch (err) {
-      alert('Erro ao aprovar pedido.');
+      alert('Erro ao aprovar pedido: ' + (err.message || 'Sem permissão.'));
     }
   };
 
   const handleReject = async (id) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('leave_requests')
         .update({ status: 'rejected', approved_by: profile.id })
-        .eq('id', id);
+        .eq('id', id)
+        .select();
 
       if (error) throw error;
+      if (!data || data.length === 0) throw new Error('Sem permissão para recusar pedidos.');
       setRequests(requests.filter(r => r.id !== id));
       alert('Pedido recusado.');
     } catch (err) {
-      alert('Erro ao recusar pedido.');
+      alert('Erro ao recusar pedido: ' + (err.message || 'Sem permissão.'));
     }
   };
 
