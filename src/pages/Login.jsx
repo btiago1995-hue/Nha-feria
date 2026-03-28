@@ -9,6 +9,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const navigate = useNavigate();
 
@@ -140,7 +141,12 @@ const Login = () => {
 
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer group">
-                <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-primary-light focus:ring-primary-light transition-all" />
+                <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-primary-light focus:ring-primary-light transition-all"
+              />
                 <span className="text-xs text-text-muted group-hover:text-text transition-colors">Lembrar-me</span>
               </label>
               <button type="button" onClick={handleForgotPassword} className="text-xs font-semibold text-primary-light hover:underline transition-all">
