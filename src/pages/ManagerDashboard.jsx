@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Users, Calendar, Download, FileText, AlertTriangle,
   History, Inbox, Sun, BarChart2, ClipboardList,
-  CheckCircle2, X, TrendingUp,
+  CheckCircle2, X, TrendingUp, UserPlus, ArrowRight,
 } from 'lucide-react';
 import SumCard from '../components/ui/SumCard';
 import ApprovalList from '../components/ui/ApprovalList';
@@ -12,6 +12,7 @@ import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../lib/LanguageContext';
 import { getBusinessDays } from '../utils/dateUtils';
+import { sendEmail } from '../utils/sendEmail';
 import { format, parseISO } from 'date-fns';
 import { pt, enGB } from 'date-fns/locale';
 
@@ -129,6 +130,26 @@ const ManagerDashboard = () => {
     }
   };
 
+  const notifyWorker = async (req, status) => {
+    const { data: workerProfile } = await supabase
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', req.user_id)
+      .single();
+    if (workerProfile?.email) {
+      sendEmail({
+        type: 'leave_decided',
+        workerEmail: workerProfile.email,
+        workerName: workerProfile.full_name || '',
+        status,
+        leaveType: req.type,
+        startDate: req.start_date,
+        endDate: req.end_date,
+        dashboardUrl: `${window.location.origin}/worker-dashboard`,
+      });
+    }
+  };
+
   const handleApprove = async (id) => {
     try {
       const { data, error } = await supabase
@@ -141,6 +162,7 @@ const ManagerDashboard = () => {
       setRequests(prev => prev.filter(r => r.id !== id));
       showToast(m('approveSuccess'));
       fetchManagerData();
+      notifyWorker(data[0], 'approved');
     } catch {
       showToast(m('approveError'), 'error');
     }
@@ -157,6 +179,7 @@ const ManagerDashboard = () => {
       if (!data || data.length === 0) throw new Error('no permission');
       setRequests(prev => prev.filter(r => r.id !== id));
       showToast(m('rejectSuccess'));
+      notifyWorker(data[0], 'rejected');
     } catch {
       showToast(m('rejectError'), 'error');
     }
@@ -197,6 +220,9 @@ const ManagerDashboard = () => {
     u.requests.some(r => today >= r.startDate && today <= r.endDate)
   );
 
+  // Onboarding banner: shown when admin/manager has no team yet (just signed up)
+  const showOnboarding = !loading && stats.teamSize === 0;
+
   return (
     <motion.div
       variants={containerVariants}
@@ -204,6 +230,34 @@ const ManagerDashboard = () => {
       animate="visible"
       className="space-y-7 max-w-[1240px] mx-auto pb-20"
     >
+      {/* Onboarding banner */}
+      <AnimatePresence>
+        {showOnboarding && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="bg-gradient-to-r from-primary to-primary-light rounded-radius p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 bg-white/15 rounded-xl flex items-center justify-center flex-shrink-0">
+                <UserPlus className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">Bem-vindo à Nha Féria!</p>
+                <p className="text-sm text-white/70 mt-0.5">A tua empresa ainda não tem colaboradores. Convida a tua equipa para começar.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/team')}
+              className="flex items-center gap-2 px-5 py-2.5 bg-accent text-primary text-sm font-bold rounded-radius-sm hover:bg-accent-hover transition-all shadow-md shadow-accent/20 whitespace-nowrap flex-shrink-0"
+            >
+              Convidar equipa <ArrowRight size={14} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Global toast */}
       <AnimatePresence>
         {toast && (

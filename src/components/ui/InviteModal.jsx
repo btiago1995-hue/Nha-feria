@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, CheckCircle2, MessageSquare, Mail, Copy, Check } from 'lucide-react';
 import { useCompany } from '../../lib/CompanyContext';
 import { supabase } from '../../lib/supabase';
+import { sendEmail } from '../../utils/sendEmail';
 
 const InviteModal = ({ isOpen, onClose, onAdd }) => {
   const { departments } = useCompany() || {};
@@ -13,6 +14,7 @@ const InviteModal = ({ isOpen, onClose, onAdd }) => {
   const [error, setError]       = useState('');
   const [formData, setFormData] = useState({
     name: '',
+    email: '',
     role: '',
     department: '',
     balance: 22,
@@ -29,9 +31,9 @@ const InviteModal = ({ isOpen, onClose, onAdd }) => {
     try {
       // Get the current authenticated user's profile for company_id + invited_by
       const { data: { user } } = await supabase.auth.getUser();
-      const { data: profile } = await supabase
+      const { data: inviterProfile } = await supabase
         .from('profiles')
-        .select('id, company_id')
+        .select('id, company_id, full_name')
         .eq('id', user.id)
         .single();
 
@@ -39,7 +41,7 @@ const InviteModal = ({ isOpen, onClose, onAdd }) => {
       const { data: invite, error: insertErr } = await supabase
         .from('company_invites')
         .insert({
-          company_id:       profile?.company_id,
+          company_id:       inviterProfile?.company_id,
           invited_by:       user.id,
           full_name:        formData.name,
           role_label:       formData.role,
@@ -56,6 +58,23 @@ const InviteModal = ({ isOpen, onClose, onAdd }) => {
       const origin = window.location.origin;
       const url = `${origin}/invite/${invite.token}`;
       setInviteUrl(url);
+
+      // Auto-send invite email if address was provided
+      if (formData.email) {
+        const { data: company } = await supabase
+          .from('companies')
+          .select('name')
+          .eq('id', inviterProfile?.company_id)
+          .single();
+        sendEmail({
+          type: 'invite',
+          toEmail: formData.email,
+          toName: formData.name,
+          inviterName: inviterProfile?.full_name || 'O teu gestor',
+          companyName: company?.name || 'a empresa',
+          inviteUrl: url,
+        });
+      }
 
       // Notify parent (adds to local list optimistically)
       onAdd(formData);
@@ -92,7 +111,7 @@ const InviteModal = ({ isOpen, onClose, onAdd }) => {
     setInviteUrl('');
     setCopied(false);
     setError('');
-    setFormData({ name: '', role: '', department: '', balance: 22, tenureMonths: 0 });
+    setFormData({ name: '', email: '', role: '', department: '', balance: 22, tenureMonths: 0 });
     onClose();
   };
 
@@ -117,16 +136,30 @@ const InviteModal = ({ isOpen, onClose, onAdd }) => {
                 </p>
               )}
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-text uppercase tracking-wider">Nome Completo</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ex: Ana Silva"
-                  className="w-full px-3 py-2 border border-border rounded-radius-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary-light/20 focus:border-primary-light"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-text uppercase tracking-wider">Nome Completo</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ex: Ana Silva"
+                    className="w-full px-3 py-2 border border-border rounded-radius-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary-light/20 focus:border-primary-light"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-text uppercase tracking-wider">
+                    Email <span className="text-text-muted font-normal normal-case">(opcional)</span>
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="ana@empresa.cv"
+                    className="w-full px-3 py-2 border border-border rounded-radius-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary-light/20 focus:border-primary-light"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">

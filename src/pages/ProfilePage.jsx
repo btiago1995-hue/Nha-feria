@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { User, Mail, Building2, Calendar, Sun, Smile, Pencil } from 'lucide-react';
+import { User, Mail, Building2, Calendar, Sun, Smile, Pencil, MapPin, Check, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../lib/LanguageContext';
+import { supabase } from '../lib/supabase';
+
+const CV_ISLANDS = [
+  'Santiago','São Vicente','Santo Antão','Fogo',
+  'Sal','Boa Vista','Maio','São Nicolau','Brava',
+];
 
 const EMOJI_OPTIONS = [
   '😀','😊','🥰','😎','🤩','😇','🤓','🥳','😸','🦸',
@@ -23,6 +29,25 @@ const ProfilePage = () => {
   const { profile } = useOutletContext();
   const { t, lang } = useLanguage();
   const p = (key) => t('profile', key);
+
+  const [island, setIsland]         = useState(profile?.island || '');
+  const [islandSaving, setIslandSaving] = useState(false);
+  const [islandSaved, setIslandSaved]   = useState(false);
+
+  const handleSaveIsland = async (val) => {
+    setIsland(val);
+    setIslandSaving(true);
+    setIslandSaved(false);
+    try {
+      await supabase.from('profiles').update({ island: val }).eq('id', profile.id);
+      setIslandSaved(true);
+      setTimeout(() => setIslandSaved(false), 2500);
+    } catch (err) {
+      console.error('Island save error:', err);
+    } finally {
+      setIslandSaving(false);
+    }
+  };
 
   const avatarKey = profile?.id ? `nha_feria_avatar_${profile.id}` : null;
   const [selectedEmoji, setSelectedEmoji] = useState(
@@ -150,6 +175,42 @@ const ProfilePage = () => {
             </motion.div>
           )}
         </AnimatePresence>
+      </div>
+
+      {/* Island selector */}
+      <div className="bg-white rounded-radius border border-border shadow-sm overflow-hidden mb-5">
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MapPin size={15} className="text-text-muted" />
+            <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Ilha de Residência</span>
+          </div>
+          {islandSaving && <Loader2 size={13} className="animate-spin text-text-muted" />}
+          {islandSaved && (
+            <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
+              <Check size={12} /> Guardado
+            </span>
+          )}
+        </div>
+        <div className="p-4">
+          <p className="text-xs text-text-muted mb-3">Usada para mostrar os feriados locais da tua ilha.</p>
+          <div className="grid grid-cols-3 gap-2">
+            {CV_ISLANDS.map(isl => (
+              <button
+                key={isl}
+                type="button"
+                onClick={() => handleSaveIsland(isl)}
+                className={`px-3 py-2 rounded-xl text-xs font-semibold border-2 transition-all text-left ${
+                  island === isl
+                    ? 'border-primary bg-primary/5 text-primary'
+                    : 'border-border hover:border-primary/30 text-text-muted'
+                }`}
+              >
+                {isl}
+                {island === isl && <Check size={11} className="inline ml-1" />}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Fields */}

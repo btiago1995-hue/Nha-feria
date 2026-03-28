@@ -7,6 +7,7 @@ import {
   History,
   CalendarDays,
   Plus,
+  XCircle,
 } from 'lucide-react';
 import DateRangePicker from '../components/ui/DateRangePicker';
 import { useOutletContext, useLocation } from 'react-router-dom';
@@ -15,6 +16,7 @@ import { getBusinessDays } from '../utils/dateUtils';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, parseISO } from 'date-fns';
+import { sendEmail } from '../utils/sendEmail';
 
 const WorkerLeaves = () => {
   const { profile } = useOutletContext();
@@ -85,6 +87,27 @@ const WorkerLeaves = () => {
       }]);
       if (error) throw error;
 
+      // Notify manager by email (best-effort)
+      const { data: mgr } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .in('role', ['manager', 'admin'])
+        .eq('company_id', profile.company_id)
+        .limit(1)
+        .single();
+      if (mgr?.email) {
+        sendEmail({
+          type: 'leave_submitted',
+          managerEmail: mgr.email,
+          managerName: mgr.full_name || '',
+          workerName: profile.full_name || 'Colaborador',
+          leaveType: formData.type,
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+          dashboardUrl: `${window.location.origin}/manager-dashboard`,
+        });
+      }
+
       setSuccessMsg(w('successMsg'));
       setFormData({ type: 'férias', startDate: '', endDate: '', description: '' });
       fetchRequests();
@@ -127,8 +150,28 @@ const WorkerLeaves = () => {
     if (profile) fetchRequests();
   }, [profile]);
 
+  const [cancelling, setCancelling] = useState(null); // id of request being cancelled
+
+  const handleCancel = async (id) => {
+    if (!window.confirm('Tens a certeza que queres cancelar este pedido?')) return;
+    setCancelling(id);
+    try {
+      const { error } = await supabase
+        .from('leave_requests')
+        .update({ status: 'cancelled' })
+        .eq('id', id)
+        .eq('status', 'pending'); // safety: only cancel pending
+      if (error) throw error;
+      setRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'cancelled' } : r));
+    } catch (err) {
+      console.error('Cancel error:', err);
+    } finally {
+      setCancelling(null);
+    }
+  };
+
   const getStatusBadge = (status) => {
-    const label = st(status);
+    const label = st(status) || status;
     switch (status) {
       case 'approved':
         return (
@@ -149,6 +192,13 @@ const WorkerLeaves = () => {
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-50 text-red-700 text-xs font-semibold rounded-full border border-red-100">
             <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
             {label}
+          </span>
+        );
+      case 'cancelled':
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 text-slate-500 text-xs font-semibold rounded-full border border-slate-200">
+            <span className="w-1.5 h-1.5 bg-slate-400 rounded-full" />
+            Cancelado
           </span>
         );
       default:
@@ -327,13 +377,14 @@ const WorkerLeaves = () => {
                   <th className="px-6 py-3">{w('period')}</th>
                   <th className="px-5 py-3">{w('type')}</th>
                   <th className="px-4 py-3 text-center">{w('days')}</th>
-                  <th className="px-6 py-3 text-right">{w('status')}</th>
+                  <th className="px-5 py-3 text-center">{w('status')}</th>
+                  <th className="px-4 py-3" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {loadingHistory ? (
                   <tr>
-                    <td colSpan="4" className="px-6 py-12 text-center text-sm text-text-muted">
+                    <td colSpan="5" className="px-6 py-12 text-center text-sm text-text-muted">
                       <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-2" />
                       {w('loading')}
                     </td>
@@ -348,12 +399,27 @@ const WorkerLeaves = () => {
                       <td className="px-4 py-4 text-center font-semibold text-primary">
                         {getBusinessDays(item.start_date, item.end_date)}
                       </td>
-                      <td className="px-6 py-4 text-right">{getStatusBadge(item.status)}</td>
+                      <td className="px-5 py-4 text-center">{getStatusBadge(item.status)}</td>
+                      <td className="px-4 py-4 text-right">
+                        {item.status === 'pending' && (
+                          <button
+                            onClick={() => handleCancel(item.id)}
+                            disabled={cancelling === item.id}
+                            title="Cancelar pedido"
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-danger transition-colors disabled:opacity-50 cursor-pointer"
+                          >
+                            {cancelling === item.id
+                              ? <span className="w-3.5 h-3.5 border border-slate-400 border-t-transparent rounded-full animate-spin" />
+                              : <XCircle size={14} />}
+                            Cancelar
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4" className="px-6 py-16 text-center text-sm text-text-muted">
+                    <td colSpan="5" className="px-6 py-16 text-center text-sm text-text-muted">
                       <CalendarDays className="w-8 h-8 text-border mx-auto mb-2" />
                       {w('noRequests')}
                     </td>
