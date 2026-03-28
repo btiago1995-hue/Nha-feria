@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
+import LandingPage from './pages/LandingPage';
 import InvitePage from './pages/InvitePage';
 import WorkerDashboard from './pages/WorkerDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
@@ -36,7 +37,7 @@ function App() {
         </Route>
 
         {/* Global Redirects */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
