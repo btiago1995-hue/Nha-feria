@@ -1,15 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { User, Mail, Briefcase, Building2, Calendar, Sun } from 'lucide-react';
+import { User, Mail, Building2, Calendar, Sun } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-const roleName = (role) => {
-  switch (role) {
-    case 'manager': return 'Gestor';
-    case 'admin':   return 'Administrador';
-    default:        return 'Colaborador';
-  }
-};
+import { useLanguage } from '../lib/LanguageContext';
 
 const roleColor = (role) => {
   switch (role) {
@@ -21,14 +14,36 @@ const roleColor = (role) => {
 
 const ProfilePage = () => {
   const { profile } = useOutletContext();
+  const { t, lang } = useLanguage();
+  const p = (key) => t('profile', key);
+
+  const roleName = (role) => {
+    switch (role) {
+      case 'manager': return p('roleManager');
+      case 'admin':   return p('roleAdmin');
+      default:        return p('roleEmployee');
+    }
+  };
+
+  const memberSince = profile?.created_at
+    ? new Date(profile.created_at).toLocaleDateString(lang === 'en' ? 'en-GB' : 'pt-PT', { year: 'numeric', month: 'long' })
+    : '—';
 
   const fields = [
-    { icon: <User size={15} />,      label: 'Nome completo',    value: profile?.full_name      || '—' },
-    { icon: <Mail size={15} />,      label: 'Email',            value: profile?.email          || '—' },
-    { icon: <Building2 size={15} />, label: 'Departamento',     value: profile?.department     || '—' },
-    { icon: <Sun size={15} />,       label: 'Saldo de férias',  value: profile ? `${profile.vacation_balance ?? 22} dias úteis` : '—' },
-    { icon: <Calendar size={15} />,  label: 'Membro desde',     value: profile?.created_at ? new Date(profile.created_at).toLocaleDateString('pt-PT', { year: 'numeric', month: 'long' }) : '—' },
+    { icon: <User size={15} />,      label: p('fullName'),     value: profile?.full_name  || '—' },
+    { icon: <Mail size={15} />,      label: p('email'),        value: profile?.email      || '—' },
+    { icon: <Building2 size={15} />, label: p('department'),   value: profile?.department || '—' },
+    { icon: <Sun size={15} />,       label: p('leaveBalance'), value: profile ? `${profile.vacation_balance ?? 22} ${p('workingDays')}` : '—' },
+    { icon: <Calendar size={15} />,  label: p('memberSince'),  value: memberSince },
   ];
+
+  const roleColor = (role) => {
+    switch (role) {
+      case 'manager': return 'bg-violet-100 text-violet-700 border-violet-200';
+      case 'admin':   return 'bg-red-100 text-red-700 border-red-200';
+      default:        return 'bg-blue-100 text-blue-700 border-blue-200';
+    }
+  };
 
   return (
     <motion.div
@@ -37,8 +52,8 @@ const ProfilePage = () => {
       className="max-w-xl mx-auto pb-20"
     >
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-text text-gradient">O Teu Perfil</h2>
-        <p className="text-sm text-text-muted mt-1">Informações da tua conta.</p>
+        <h2 className="text-2xl font-bold text-text text-gradient">{p('title')}</h2>
+        <p className="text-sm text-text-muted mt-1">{p('subtitle')}</p>
       </div>
 
       {/* Avatar + role */}

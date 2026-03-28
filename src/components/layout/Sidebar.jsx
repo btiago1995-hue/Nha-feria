@@ -1,4 +1,3 @@
-import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -12,29 +11,33 @@ import {
   X
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useLanguage } from '../../lib/LanguageContext';
 
 const Sidebar = ({ profile, isOpen, onClose }) => {
   const role = profile?.role;
+  const { t } = useLanguage();
+  const n = (key) => t('nav', key);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.href = '/login';
   };
 
-  const menuItems = role === 'manager' || role === 'admin' 
+  const menuItems = (role === 'manager' || role === 'admin')
     ? [
-        { name: 'Dashboard', icon: <LayoutDashboard size={18} />, path: '/manager-dashboard' },
-        { name: 'Mapa de Férias', icon: <Palmtree size={18} />, path: '/manager-calendar' },
-        { name: 'Equipa', icon: <Users size={18} />, path: '/team' },
-        { name: 'Relatórios', icon: <FileText size={18} />, path: '/compliance' },
+        { name: n('dashboard'),     icon: <LayoutDashboard size={18} />, path: '/manager-dashboard' },
+        { name: n('leaveCalendar'), icon: <Palmtree size={18} />,        path: '/manager-calendar'  },
+        { name: n('team'),          icon: <Users size={18} />,           path: '/team'              },
+        { name: n('reports'),       icon: <FileText size={18} />,        path: '/compliance'        },
       ]
     : [
-        { name: 'Dashboard', icon: <LayoutDashboard size={18} />, path: '/worker-dashboard' },
-        { name: 'As Minhas Férias', icon: <Palmtree size={18} />, path: '/worker-leaves' },
+        { name: n('dashboard'), icon: <LayoutDashboard size={18} />, path: '/worker-dashboard' },
+        { name: n('myLeaves'),  icon: <Palmtree size={18} />,        path: '/worker-leaves'    },
       ];
 
   const bottomItems = [
-    { name: 'Perfil', icon: <User size={18} />, path: '/profile' },
-    { name: 'Definições', icon: <Settings size={18} />, path: '/settings' },
+    { name: n('profile'),  icon: <User size={18} />,     path: '/profile'  },
+    { name: n('settings'), icon: <Settings size={18} />, path: '/settings' },
   ];
 
   return (

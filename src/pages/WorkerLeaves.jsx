@@ -10,6 +10,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { useOutletContext, useLocation } from 'react-router-dom';
+import { useLanguage } from '../lib/LanguageContext';
 import { getBusinessDays } from '../utils/dateUtils';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,6 +19,9 @@ import { format, parseISO } from 'date-fns';
 const WorkerLeaves = () => {
   const { profile } = useOutletContext();
   const location = useLocation();
+  const { t } = useLanguage();
+  const w = (key, vars) => t('workerLeaves', key, vars);
+  const st = (key) => t('status', key);
 
   // Default to 'history' when coming from "Ver Todos", else 'form'
   const [activeTab, setActiveTab] = useState(
@@ -46,13 +50,13 @@ const WorkerLeaves = () => {
         const days = getBusinessDays(formData.startDate, formData.endDate);
         setBusinessDays(days);
         if (formData.type !== 'justificação' && days > availableBalance) {
-          setFormError('Saldo insuficiente para este período.');
+          setFormError(w('insufficientBalance'));
         } else {
           setFormError(null);
         }
       } else {
         setBusinessDays(0);
-        setFormError('A data de início deve ser anterior à data de fim.');
+        setFormError(w('invalidDates'));
       }
     } else {
       setBusinessDays(0);
@@ -76,7 +80,7 @@ const WorkerLeaves = () => {
       }]);
       if (error) throw error;
 
-      setSuccessMsg('Pedido submetido! O teu gestor foi notificado.');
+      setSuccessMsg(w('successMsg'));
       setFormData({ type: 'férias', startDate: '', endDate: '', description: '' });
       fetchRequests();
 
@@ -86,7 +90,7 @@ const WorkerLeaves = () => {
       }, 2500);
     } catch (err) {
       console.error('Error submitting leave request:', err);
-      setFormError('Erro ao submeter pedido. Por favor, tenta novamente.');
+      setFormError(w('submitError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -119,26 +123,27 @@ const WorkerLeaves = () => {
   }, [profile]);
 
   const getStatusBadge = (status) => {
+    const label = st(status);
     switch (status) {
       case 'approved':
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-full border border-emerald-100">
             <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-            Aprovado
+            {label}
           </span>
         );
       case 'pending':
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full border border-amber-100">
             <span className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
-            Pendente
+            {label}
           </span>
         );
       case 'rejected':
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-50 text-red-700 text-xs font-semibold rounded-full border border-red-100">
             <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
-            Rejeitado
+            {label}
           </span>
         );
       default:
@@ -154,8 +159,8 @@ const WorkerLeaves = () => {
     >
       {/* Header */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-text text-gradient">As Minhas Férias</h2>
-        <p className="text-sm text-text-muted mt-1">Submete pedidos e consulta o teu histórico.</p>
+        <h2 className="text-2xl font-bold text-text text-gradient">{w('title')}</h2>
+        <p className="text-sm text-text-muted mt-1">{w('subtitle')}</p>
       </div>
 
       {/* Tabs */}
@@ -166,7 +171,7 @@ const WorkerLeaves = () => {
             ${activeTab === 'form' ? 'bg-white text-text shadow-sm' : 'text-text-muted hover:text-text'}`}
         >
           <Plus size={15} />
-          Nova Solicitação
+          {w('newRequest')}
         </button>
         <button
           onClick={() => setActiveTab('history')}
@@ -174,7 +179,7 @@ const WorkerLeaves = () => {
             ${activeTab === 'history' ? 'bg-white text-text shadow-sm' : 'text-text-muted hover:text-text'}`}
         >
           <History size={15} />
-          Histórico
+          {w('history')}
           {requests.length > 0 && (
             <span className="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
               {requests.length}
@@ -207,8 +212,8 @@ const WorkerLeaves = () => {
                 <Plane size={22} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-text">Solicitar Ausência</h3>
-                <p className="text-sm text-text-muted">O cálculo de dias úteis é automático.</p>
+                <h3 className="text-lg font-bold text-text">{w('requestAbsence')}</h3>
+                <p className="text-sm text-text-muted">{w('autoCalc')}</p>
               </div>
             </div>
           </div>
@@ -221,16 +226,16 @@ const WorkerLeaves = () => {
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
               >
-                <option value="férias">Férias Anuais</option>
-                <option value="falta">Folga / Dia de Descanso</option>
-                <option value="justificação">Falta Justificada (Doença, etc.)</option>
-                <option value="formação">Formação</option>
+                <option value="férias">{w('annualLeave')}</option>
+                <option value="falta">{w('dayOff')}</option>
+                <option value="justificação">{w('justifiedAbsence')}</option>
+                <option value="formação">{w('training')}</option>
               </select>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-text uppercase tracking-wider">Data de Início</label>
+                <label className="text-xs font-bold text-text uppercase tracking-wider">{w('startDate')}</label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-3 text-text-light w-4 h-4" />
                   <input
@@ -243,7 +248,7 @@ const WorkerLeaves = () => {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-text uppercase tracking-wider">Data de Fim</label>
+                <label className="text-xs font-bold text-text uppercase tracking-wider">{w('endDate')}</label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-3 text-text-light w-4 h-4" />
                   <input
@@ -259,12 +264,12 @@ const WorkerLeaves = () => {
 
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-text uppercase tracking-wider">
-                {formData.type === 'justificação' ? 'Motivo / Justificação' : 'Observações (Opcional)'}
+                {formData.type === 'justificação' ? w('reason') : w('notes')}
               </label>
               <textarea
                 rows="3"
                 className="w-full px-4 py-3 bg-bg border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-light/20 focus:border-primary-light transition-all"
-                placeholder={formData.type === 'justificação' ? 'Ex: Consulta médica, casamento...' : 'Alguma nota para o teu gestor?'}
+                placeholder={formData.type === 'justificação' ? w('reasonPlaceholder') : w('notesPlaceholder')}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 required={formData.type === 'justificação'}
@@ -282,19 +287,19 @@ const WorkerLeaves = () => {
                   {formError ? <AlertCircle className="flex-shrink-0 mt-0.5" size={18} /> : <Info className="flex-shrink-0 mt-0.5" size={18} />}
                   <div className="flex-1">
                     <div className="text-sm font-bold flex items-center justify-between">
-                      <span>{formError ? 'Atenção' : 'Resumo do Período'}</span>
+                      <span>{formError ? w('warning') : w('periodSummary')}</span>
                       {!formError && (
                         <span className="bg-primary/10 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider">
-                          {businessDays} Dias Úteis
+                          {businessDays} {w('workingDays')}
                         </span>
                       )}
                     </div>
                     <p className="text-[13px] leading-relaxed mt-1 opacity-90">
-                      {formError || `Este pedido corresponde a ${businessDays} dias úteis, excluindo fins de semana e feriados nacionais de Cabo Verde.`}
+                      {formError || w('excl', { days: businessDays })}
                     </p>
                     {!formError && formData.type !== 'justificação' && (
                       <div className="mt-2 flex items-center gap-2 text-[11px] font-bold text-primary bg-white px-3 py-1.5 rounded-lg border border-primary/5 shadow-sm w-fit">
-                        <CalendarDays size={13} /> Saldo após pedido: {availableBalance - businessDays} dias
+                        <CalendarDays size={13} /> {w('balanceAfter')}: {availableBalance - businessDays} {w('days')}
                       </div>
                     )}
                   </div>
@@ -313,11 +318,11 @@ const WorkerLeaves = () => {
               {isSubmitting ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  A processar...
+                  {w('processing')}
                 </>
               ) : (
                 <>
-                  <CheckCircle2 size={18} /> Submeter Pedido
+                  <CheckCircle2 size={18} /> {w('submit')}
                 </>
               )}
             </motion.button>
@@ -332,10 +337,10 @@ const WorkerLeaves = () => {
             <table className="w-full text-left text-sm">
               <thead className="bg-bg text-xs font-bold text-text-muted uppercase tracking-wider">
                 <tr>
-                  <th className="px-6 py-3">Período</th>
-                  <th className="px-5 py-3">Tipo</th>
-                  <th className="px-4 py-3 text-center">Dias</th>
-                  <th className="px-6 py-3 text-right">Estado</th>
+                  <th className="px-6 py-3">{w('period')}</th>
+                  <th className="px-5 py-3">{w('type')}</th>
+                  <th className="px-4 py-3 text-center">{w('days')}</th>
+                  <th className="px-6 py-3 text-right">{w('status')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -343,7 +348,7 @@ const WorkerLeaves = () => {
                   <tr>
                     <td colSpan="4" className="px-6 py-12 text-center text-sm text-text-muted">
                       <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-2" />
-                      A carregar...
+                      {w('loading')}
                     </td>
                   </tr>
                 ) : requests.length > 0 ? (
@@ -363,7 +368,7 @@ const WorkerLeaves = () => {
                   <tr>
                     <td colSpan="4" className="px-6 py-16 text-center text-sm text-text-muted">
                       <CalendarDays className="w-8 h-8 text-border mx-auto mb-2" />
-                      Ainda não tens pedidos de férias.
+                      {w('noRequests')}
                     </td>
                   </tr>
                 )}
