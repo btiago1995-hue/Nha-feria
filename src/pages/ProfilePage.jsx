@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { User, Mail, Building2, Calendar, Sun, Smile } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { User, Mail, Building2, Calendar, Sun, Smile, Pencil } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '../lib/LanguageContext';
 
 const EMOJI_OPTIONS = [
@@ -28,14 +28,19 @@ const ProfilePage = () => {
   const [selectedEmoji, setSelectedEmoji] = useState(
     () => (avatarKey ? localStorage.getItem(avatarKey) : null) || null
   );
+  const [pickerOpen, setPickerOpen] = useState(() => !localStorage.getItem(avatarKey));
 
   const handleSelectEmoji = (emoji) => {
-    const next = emoji === selectedEmoji ? null : emoji;
-    setSelectedEmoji(next);
-    if (avatarKey) {
-      if (next) localStorage.setItem(avatarKey, next);
-      else localStorage.removeItem(avatarKey);
-    }
+    setSelectedEmoji(emoji);
+    if (avatarKey) localStorage.setItem(avatarKey, emoji);
+    // Auto-close picker after a short delay so user sees the selection
+    setTimeout(() => setPickerOpen(false), 350);
+  };
+
+  const handleRemoveEmoji = () => {
+    setSelectedEmoji(null);
+    if (avatarKey) localStorage.removeItem(avatarKey);
+    setPickerOpen(true);
   };
 
   const roleName = (role) => {
@@ -90,36 +95,61 @@ const ProfilePage = () => {
 
       {/* Emoji picker */}
       <div className="bg-white rounded-radius border border-border shadow-sm overflow-hidden mb-5">
-        <div className="px-6 py-4 border-b border-border flex items-center gap-2">
-          <Smile size={15} className="text-text-muted" />
-          <span className="text-xs font-bold text-text-muted uppercase tracking-wider">{p('chooseAvatar')}</span>
-        </div>
-        <div className="px-6 py-4">
-          <p className="text-xs text-text-muted mb-3">{p('avatarHint')}</p>
-          <div className="grid grid-cols-10 gap-1.5">
-            {EMOJI_OPTIONS.map((emoji) => (
-              <button
-                key={emoji}
-                onClick={() => handleSelectEmoji(emoji)}
-                className={`text-xl w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer
-                  ${selectedEmoji === emoji
-                    ? 'bg-primary/10 ring-2 ring-primary scale-110'
-                    : 'hover:bg-bg hover:scale-110'
-                  }`}
-              >
-                {emoji}
-              </button>
-            ))}
+        <button
+          onClick={() => setPickerOpen(o => !o)}
+          className="w-full px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-bg/50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <Smile size={15} className="text-text-muted" />
+            <span className="text-xs font-bold text-text-muted uppercase tracking-wider">{p('chooseAvatar')}</span>
           </div>
-          {selectedEmoji && (
-            <button
-              onClick={() => handleSelectEmoji(selectedEmoji)}
-              className="mt-3 text-xs text-text-muted hover:text-text transition-colors cursor-pointer"
+          <div className="flex items-center gap-2">
+            {selectedEmoji && (
+              <span className="text-base">{selectedEmoji}</span>
+            )}
+            <Pencil size={13} className="text-text-muted" />
+          </div>
+        </button>
+
+        <AnimatePresence initial={false}>
+          {pickerOpen && (
+            <motion.div
+              key="picker"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: 'easeInOut' }}
+              className="overflow-hidden"
             >
-              {p('removeAvatar')}
-            </button>
+              <div className="px-6 pb-5 pt-1 border-t border-border">
+                <p className="text-xs text-text-muted mb-3">{p('avatarHint')}</p>
+                <div className="grid grid-cols-10 gap-1.5">
+                  {EMOJI_OPTIONS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      onClick={() => handleSelectEmoji(emoji)}
+                      className={`text-xl w-9 h-9 rounded-lg flex items-center justify-center transition-all cursor-pointer
+                        ${selectedEmoji === emoji
+                          ? 'bg-primary/10 ring-2 ring-primary scale-110'
+                          : 'hover:bg-bg hover:scale-110'
+                        }`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+                {selectedEmoji && (
+                  <button
+                    onClick={handleRemoveEmoji}
+                    className="mt-3 text-xs text-text-muted hover:text-danger transition-colors cursor-pointer"
+                  >
+                    {p('removeAvatar')}
+                  </button>
+                )}
+              </div>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
 
       {/* Fields */}
