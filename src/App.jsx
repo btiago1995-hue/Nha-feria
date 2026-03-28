@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
+import InvitePage from './pages/InvitePage';
 import WorkerDashboard from './pages/WorkerDashboard';
 import ManagerDashboard from './pages/ManagerDashboard';
 import EmployeeDirectory from './pages/EmployeeDirectory';
@@ -17,6 +18,7 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />
+        <Route path="/invite/:token" element={<InvitePage />} />
 
         {/* Protected Routes */}
         <Route element={<MainLayout />}>
