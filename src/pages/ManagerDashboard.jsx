@@ -229,19 +229,24 @@ const ManagerDashboard = () => {
       </AnimatePresence>
 
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="flex flex-col gap-0.5">
           <p className="text-xs font-semibold text-primary-light uppercase tracking-widest">Gestão</p>
           <h2 className="text-2xl font-bold text-text text-gradient">{m('title')}</h2>
           <p className="text-sm text-text-muted">{m('subtitle')}</p>
         </div>
-        <button
-          onClick={exportMapaAnual}
-          className="flex items-center gap-2 px-4 py-2.5 bg-white border border-border rounded-radius-sm text-sm font-semibold hover:bg-bg hover:border-primary/20 transition-all shadow-sm active:scale-95 cursor-pointer"
-        >
-          <Download size={15} />
-          {m('exportReport')}
-        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-text-muted font-medium capitalize tabular-nums whitespace-nowrap hidden sm:block">
+            {format(new Date(), "EEEE, d 'de' MMMM yyyy", { locale: dateLocale })}
+          </span>
+          <button
+            onClick={exportMapaAnual}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-border rounded-radius-sm text-sm font-semibold hover:bg-bg hover:border-primary/20 hover:-translate-y-0.5 transition-all duration-200 shadow-sm active:scale-95 cursor-pointer"
+          >
+            <Download size={15} />
+            {m('exportReport')}
+          </button>
+        </div>
       </motion.div>
 
       {/* KPI Cards */}
@@ -279,10 +284,10 @@ const ManagerDashboard = () => {
       {/* Approvals + Who's Off + Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Approval List */}
-        <motion.div variants={itemVariants} className="bg-white rounded-radius border border-border shadow-sm flex flex-col">
+        <motion.div variants={itemVariants} className="bg-white rounded-radius border border-border shadow-sm flex flex-col hover:shadow-md transition-shadow duration-200">
           <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-            <div className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
-              <History size={15} />
+            <div className="text-xs font-bold text-text-muted uppercase tracking-widest flex items-center gap-2">
+              <History size={13} />
               {m('approvalRequests')}
               {stats.pendingCount > 0 && (
                 <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
@@ -292,7 +297,7 @@ const ManagerDashboard = () => {
             </div>
             <button
               onClick={() => navigate('/manager-calendar')}
-              className="text-xs font-semibold text-primary-light hover:underline cursor-pointer"
+              className="text-xs font-semibold text-primary-light hover:text-primary transition-colors cursor-pointer"
             >
               {m('viewAll')}
             </button>
@@ -318,37 +323,38 @@ const ManagerDashboard = () => {
         {/* Who's Off + Stats */}
         <div className="space-y-5">
           {/* Who's off today */}
-          <motion.div variants={itemVariants} className="bg-white rounded-radius border border-border shadow-sm p-5">
+          <motion.div variants={itemVariants} className="bg-white rounded-radius border border-border shadow-sm p-5 hover:shadow-md transition-shadow duration-200">
             <div className="flex items-center justify-between mb-4">
-              <div className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
-                <Calendar size={15} />
+              <div className="text-xs font-bold text-text-muted uppercase tracking-widest flex items-center gap-2">
+                <Calendar size={13} />
                 {m('whoIsOff')}
               </div>
-              <span className="text-xs text-text-muted font-medium">
+              <span className="text-xs tabular-nums text-text-muted font-medium">
                 {format(new Date(), 'd MMM yyyy', { locale: dateLocale })}
               </span>
             </div>
             <div className="space-y-2">
               {offTodayList.length > 0 ? (
                 offTodayList.map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-3 p-3 bg-bg rounded-radius-sm hover:bg-bg/80 transition-colors">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-sm">
+                  <div key={idx} className="flex items-center gap-3 px-3 py-2.5 bg-bg rounded-radius-sm hover:bg-slate-100/70 transition-colors">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0 shadow-sm ring-2 ring-white">
                       {item.avatar}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-semibold text-text leading-tight truncate">{item.name}</div>
                       {item.department && item.department !== '—' && (
-                        <div className="text-[10px] text-text-muted mt-0.5">{item.department}</div>
+                        <div className="text-[10px] text-text-light mt-0.5">{item.department}</div>
                       )}
                     </div>
                     <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-full border border-emerald-100">
-                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
                       {m('onLeave')}
                     </span>
                   </div>
                 ))
               ) : (
-                <div className="py-8 text-center text-xs text-text-muted bg-bg/30 border border-dashed border-border rounded-radius-sm">
+                <div className="py-8 text-center text-xs text-text-muted flex flex-col items-center gap-2 bg-bg/30 border border-dashed border-border rounded-radius-sm">
+                  <Users size={18} className="text-border" />
                   {m('noOneAbsent')}
                 </div>
               )}
@@ -356,19 +362,19 @@ const ManagerDashboard = () => {
           </motion.div>
 
           {/* Team stats */}
-          <motion.div variants={itemVariants} className="bg-white rounded-radius border border-border shadow-sm p-5">
-            <div className="text-xs font-bold text-text-muted uppercase tracking-wider mb-4 flex items-center gap-2">
-              <TrendingUp size={15} />
+          <motion.div variants={itemVariants} className="bg-white rounded-radius border border-border shadow-sm p-5 hover:shadow-md transition-shadow duration-200">
+            <div className="text-xs font-bold text-text-muted uppercase tracking-widest mb-4 flex items-center gap-2">
+              <TrendingUp size={13} />
               {m('avgTeamBalance')}
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 bg-primary/5 rounded-radius-sm text-center border border-primary/10">
-                <div className="text-2xl font-bold text-primary">{loading ? '…' : stats.avgBalance}</div>
-                <div className="text-xs text-text-muted mt-1">{m('avgAvailableDays')}</div>
+              <div className="p-4 bg-primary/5 rounded-radius-sm text-center border border-primary/10 hover:bg-primary/8 transition-colors">
+                <div className="text-2xl font-bold text-primary tabular-nums">{loading ? '…' : stats.avgBalance}</div>
+                <div className="text-[11px] text-text-muted mt-1 leading-tight">{m('avgAvailableDays')}</div>
               </div>
-              <div className="p-4 bg-emerald-50 rounded-radius-sm text-center border border-emerald-100">
-                <div className="text-2xl font-bold text-emerald-600">{loading ? '…' : `${stats.approvalRate}%`}</div>
-                <div className="text-xs text-text-muted mt-1">{m('approvalRate')}</div>
+              <div className="p-4 bg-emerald-50 rounded-radius-sm text-center border border-emerald-100 hover:bg-emerald-50/80 transition-colors">
+                <div className="text-2xl font-bold text-emerald-600 tabular-nums">{loading ? '…' : `${stats.approvalRate}%`}</div>
+                <div className="text-[11px] text-text-muted mt-1 leading-tight">{m('approvalRate')}</div>
               </div>
             </div>
           </motion.div>
@@ -376,10 +382,10 @@ const ManagerDashboard = () => {
       </div>
 
       {/* Gantt Chart */}
-      <motion.div variants={itemVariants} className="bg-white rounded-radius border border-border shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+      <motion.div variants={itemVariants} className="bg-white rounded-radius border border-border shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-200">
         <div className="px-6 py-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
-            <Calendar size={15} />
+          <div className="text-xs font-bold text-text-muted uppercase tracking-widest flex items-center gap-2">
+            <Calendar size={13} />
             {m('globalLeaveMap')}
           </div>
           <select
@@ -407,14 +413,15 @@ const ManagerDashboard = () => {
 
       {/* Compliance Reports */}
       <motion.div variants={itemVariants} className="space-y-4">
-        <div className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
-          <FileText size={15} />
+        <div className="text-xs font-bold text-text-muted uppercase tracking-widest flex items-center gap-2">
+          <FileText size={13} />
           {m('complianceTitle')}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <ReportCard
             icon={<BarChart2 className="w-6 h-6" />}
             iconColor="text-primary-light bg-blue-50"
+            iconRing="ring-blue-100"
             title="Mapa de Férias Anual"
             desc={`${approvedReqs.length} pedidos aprovados — ficheiro CSV pronto para afixação e envio à DGT.`}
             btnText="Exportar CSV"
@@ -424,6 +431,7 @@ const ManagerDashboard = () => {
           <ReportCard
             icon={<ClipboardList className="w-6 h-6" />}
             iconColor="text-violet-600 bg-violet-50"
+            iconRing="ring-violet-100"
             title="Relatório DGT"
             desc={`${approvedReqs.filter(r => r.start_date >= '2026-01-01' && r.start_date <= '2026-04-30').length} pedidos Jan–Abr 2026 para a Direção Geral do Trabalho.`}
             btnText="Exportar DGT"
@@ -433,6 +441,7 @@ const ManagerDashboard = () => {
           <ReportCard
             icon={<AlertTriangle className="w-6 h-6" />}
             iconColor="text-amber-600 bg-amber-50"
+            iconRing="ring-amber-100"
             title="Alertas de Acumulação"
             desc={stats.accumAlerts.length === 0
               ? 'Nenhum colaborador em risco de acumulação.'
@@ -447,9 +456,9 @@ const ManagerDashboard = () => {
   );
 };
 
-const ReportCard = ({ icon, iconColor = 'text-primary-light bg-blue-50', title, desc, btnText, btnColor = 'primary', onAction, disabled }) => (
-  <div className="bg-white border border-border rounded-radius p-5 hover:shadow-md transition-all group flex flex-col">
-    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 flex-shrink-0 ${iconColor}`}>
+const ReportCard = ({ icon, iconColor = 'text-primary-light bg-blue-50', iconRing = 'ring-blue-100', title, desc, btnText, btnColor = 'primary', onAction, disabled }) => (
+  <div className="bg-white border border-border rounded-radius p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group flex flex-col">
+    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 flex-shrink-0 ring-4 ${iconColor} ${iconRing} group-hover:scale-105 transition-transform duration-200`}>
       {icon}
     </div>
     <h4 className="text-sm font-bold text-text mb-1.5 group-hover:text-primary-light transition-colors">{title}</h4>
@@ -458,7 +467,7 @@ const ReportCard = ({ icon, iconColor = 'text-primary-light bg-blue-50', title, 
       onClick={onAction}
       disabled={disabled}
       className={`w-full py-2.5 rounded-radius-sm text-xs font-bold text-white transition-all cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed
-        ${btnColor === 'accent' ? 'bg-accent hover:bg-accent-hover' : 'bg-primary hover:bg-primary-light'}`}
+        ${btnColor === 'accent' ? 'bg-accent hover:bg-accent-hover shadow-sm shadow-accent/20' : 'bg-primary hover:bg-primary-light shadow-sm shadow-primary/20'}`}
     >
       {btnText}
     </button>

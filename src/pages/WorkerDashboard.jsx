@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Sun, CheckCircle2, Clock, Plane, History, CalendarDays } from 'lucide-react';
+import { Sun, CheckCircle2, Clock, Plane, History, CalendarDays, Sparkles } from 'lucide-react';
 import StatCard from '../components/ui/StatCard';
 import VacationBalanceCard from '../components/ui/VacationBalanceCard';
 import TeamCalendar from '../components/ui/TeamCalendar';
@@ -159,10 +159,18 @@ const WorkerDashboard = () => {
       className="space-y-7 max-w-[1200px] mx-auto"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col gap-0.5">
-        <p className="text-xs font-semibold text-primary-light uppercase tracking-widest">{getGreeting()}{firstName ? `, ${firstName}` : ''} 👋</p>
-        <h2 className="text-2xl font-bold text-text text-gradient">{d('title')}</h2>
-        <p className="text-sm text-text-muted">{d('subtitle')}</p>
+      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+        <div className="flex flex-col gap-0.5">
+          <p className="text-xs font-semibold text-primary-light uppercase tracking-widest flex items-center gap-1.5">
+            <Sparkles size={11} className="opacity-70" />
+            {getGreeting()}{firstName ? `, ${firstName}` : ''}
+          </p>
+          <h2 className="text-2xl font-bold text-text text-gradient">{d('title')}</h2>
+          <p className="text-sm text-text-muted">{d('subtitle')}</p>
+        </div>
+        <div className="text-xs text-text-muted font-medium capitalize tabular-nums whitespace-nowrap">
+          {format(new Date(), "EEEE, d 'de' MMMM yyyy", { locale: dateLocale })}
+        </div>
       </motion.div>
 
       {/* Stats row */}
@@ -201,24 +209,25 @@ const WorkerDashboard = () => {
 
           {/* Next Holiday */}
           {nextHoliday ? (
-            <div className="bg-white border border-border rounded-radius p-4 flex items-center gap-4 hover:shadow-sm transition-shadow">
-              <div className="w-12 h-14 bg-violet-50 rounded-radius-sm flex flex-col items-center justify-center flex-shrink-0 border border-violet-100">
-                <div className="text-2xl font-bold text-violet-700 leading-none">
+            <div className="bg-white border border-border rounded-radius p-4 flex items-center gap-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+              <div className="w-14 h-14 bg-violet-50 rounded-xl flex flex-col items-center justify-center flex-shrink-0 border border-violet-100 ring-4 ring-violet-50">
+                <div className="text-2xl font-bold text-violet-700 leading-none tabular-nums">
                   {format(parseISO(nextHoliday.date), 'd')}
                 </div>
                 <div className="text-[10px] text-violet-500 font-bold uppercase mt-0.5">
                   {format(parseISO(nextHoliday.date), 'MMM', { locale: dateLocale })}
                 </div>
               </div>
-              <div>
-                <div className="text-xs font-bold text-violet-600 uppercase tracking-wider mb-0.5">
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] font-bold text-violet-500 uppercase tracking-widest mb-0.5">
                   {nextHoliday.scope === 'national' ? d('nextHoliday') : `${d('islandHoliday')} — ${nextHoliday.island}`}
                 </div>
-                <div className="text-sm font-bold text-text">{nextHoliday.name}</div>
+                <div className="text-sm font-bold text-text truncate">{nextHoliday.name}</div>
               </div>
             </div>
           ) : (
-            <div className="bg-slate-50 border border-dashed border-border rounded-radius p-5 text-center text-xs text-text-muted">
+            <div className="bg-white border border-dashed border-border rounded-radius p-5 text-center text-xs text-text-muted flex flex-col items-center gap-2">
+              <CalendarDays size={18} className="text-border" />
               {d('noHolidays')}
             </div>
           )}
@@ -241,13 +250,13 @@ const WorkerDashboard = () => {
           />
         </motion.div>
 
-        <motion.div variants={itemVariants} className="bg-white rounded-radius border border-border shadow-sm flex flex-col">
+        <motion.div variants={itemVariants} className="bg-white rounded-radius border border-border shadow-sm flex flex-col hover:shadow-md transition-shadow duration-200">
           <div className="px-6 py-4 border-b border-border flex items-center justify-between">
-            <div className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
-              <History className="w-4 h-4" />
+            <div className="text-xs font-bold text-text-muted uppercase tracking-widest flex items-center gap-2">
+              <History className="w-3.5 h-3.5" />
               {d('recentHistory')}
             </div>
-            <button onClick={() => navigate('/worker-leaves', { state: { tab: 'history' } })} className="text-xs font-semibold text-primary-light hover:underline cursor-pointer">{d('viewAll')}</button>
+            <button onClick={() => navigate('/worker-leaves', { state: { tab: 'history' } })} className="text-xs font-semibold text-primary-light hover:text-primary transition-colors cursor-pointer">{d('viewAll')}</button>
           </div>
           <div className="flex-1 overflow-x-auto">
             <table className="w-full text-left text-sm">
