@@ -15,7 +15,7 @@ import {
 import SumCard from '../components/ui/SumCard';
 import ApprovalList from '../components/ui/ApprovalList';
 import GanttChart from '../components/ui/GanttChart';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
 
@@ -34,6 +34,7 @@ const itemVariants = {
 
 const ManagerDashboard = () => {
   const { profile } = useOutletContext();
+  const navigate = useNavigate();
 
   const [requests, setRequests] = useState([]);
   const [teamProfiles, setTeamProfiles] = useState([]);
@@ -198,7 +199,7 @@ const ManagerDashboard = () => {
               <History size={15} />
               Pedidos de Aprovação
             </div>
-            <button className="text-xs font-semibold text-primary-light hover:underline cursor-pointer">Ver Todos</button>
+            <button onClick={() => navigate('/manager-calendar')} className="text-xs font-semibold text-primary-light hover:underline cursor-pointer">Ver Todos</button>
           </div>
           <div className="p-5">
             <ApprovalList requests={requests} onApprove={handleApprove} onReject={handleReject} />

@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Bell, Menu } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { format, parseISO } from 'date-fns';
+import { pt } from 'date-fns/locale';
 
-const TopBar = ({ title, user, onMenuClick }) => {
+const TopBar = ({ title, user, profile, onMenuClick }) => {
   const today = new Date().toLocaleDateString('pt-PT', {
     weekday: 'long',
     day: 'numeric',
@@ -11,6 +14,67 @@ const TopBar = ({ title, user, onMenuClick }) => {
 
   // Capitalize first letter of weekday
   const formattedDate = today.charAt(0).toUpperCase() + today.slice(1);
+
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [loadingNotif, setLoadingNotif] = useState(false);
+  const [fetched, setFetched] = useState(false);
+  const panelRef = useRef(null);
+
+  useEffect(() => {
+    if (!notifOpen) return;
+    const handler = (e) => {
+      if (panelRef.current && !panelRef.current.contains(e.target)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [notifOpen]);
+
+  const fetchNotifications = async () => {
+    if (fetched || !profile) return;
+    setLoadingNotif(true);
+    try {
+      if (profile.role === 'manager') {
+        const { data } = await supabase
+          .from('leave_requests')
+          .select('id, type, start_date, end_date, status, profiles!leave_requests_user_id_fkey(full_name)')
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false })
+          .limit(5);
+        setNotifications((data || []).map(r => ({
+          id: r.id,
+          text: `${r.profiles?.full_name || 'Alguém'} pediu ${r.type}`,
+          sub: `${format(parseISO(r.start_date), 'd MMM', { locale: pt })} – ${format(parseISO(r.end_date), 'd MMM yyyy', { locale: pt })}`,
+          dot: 'bg-amber-400',
+        })));
+      } else {
+        const { data } = await supabase
+          .from('leave_requests')
+          .select('id, type, start_date, end_date, status')
+          .eq('user_id', profile.id)
+          .order('created_at', { ascending: false })
+          .limit(5);
+        setNotifications((data || []).map(r => ({
+          id: r.id,
+          text: `${r.type.charAt(0).toUpperCase() + r.type.slice(1)} – ${r.status === 'approved' ? 'Aprovada' : r.status === 'rejected' ? 'Recusada' : 'Pendente'}`,
+          sub: `${format(parseISO(r.start_date), 'd MMM', { locale: pt })} – ${format(parseISO(r.end_date), 'd MMM yyyy', { locale: pt })}`,
+          dot: r.status === 'approved' ? 'bg-emerald-400' : r.status === 'rejected' ? 'bg-red-400' : 'bg-amber-400',
+        })));
+      }
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+    } finally {
+      setLoadingNotif(false);
+      setFetched(true);
+    }
+  };
+
+  const handleBellClick = () => {
+    setNotifOpen(prev => !prev);
+    if (!fetched) fetchNotifications();
+  };
 
   return (
     <header className="h-16 bg-white border-b border-border px-7 flex items-center justify-between sticky top-0 z-40 shadow-sm">
@@ -25,15 +89,43 @@ const TopBar = ({ title, user, onMenuClick }) => {
       </div>
 
       <div className="flex items-center gap-3">
-        <button className="w-9 h-9 rounded-radius-sm border border-border flex items-center justify-center text-text hover:bg-bg transition-all relative group">
-          <Bell size={18} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full border-2 border-white"></span>
-          
-          {/* Simple Tooltip on hover */}
-          <span className="absolute -bottom-10 right-0 bg-primary text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">
-            Notificações
-          </span>
-        </button>
+        <div className="relative" ref={panelRef}>
+          <button
+            onClick={handleBellClick}
+            className="w-9 h-9 rounded-radius-sm border border-border flex items-center justify-center text-text hover:bg-bg transition-all relative"
+          >
+            <Bell size={18} />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-danger rounded-full border-2 border-white"></span>
+          </button>
+
+          {notifOpen && (
+            <div className="absolute top-full right-0 mt-2 w-72 bg-white border border-border rounded-radius shadow-xl z-50 overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Notificações</span>
+                <span className="text-[10px] text-text-muted">{notifications.length} {notifications.length === 1 ? 'item' : 'itens'}</span>
+              </div>
+              {loadingNotif ? (
+                <div className="p-6 text-center text-xs text-text-muted">A carregar...</div>
+              ) : notifications.length === 0 ? (
+                <div className="p-6 text-center text-xs text-text-muted">Sem notificações.</div>
+              ) : (
+                <ul className="divide-y divide-border max-h-64 overflow-y-auto">
+                  {notifications.map(n => (
+                    <li key={n.id} className="px-4 py-3 hover:bg-bg transition-colors">
+                      <div className="flex items-start gap-2.5">
+                        <span className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${n.dot}`} />
+                        <div>
+                          <p className="text-xs font-semibold text-text">{n.text}</p>
+                          <p className="text-[11px] text-text-muted mt-0.5">{n.sub}</p>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </div>
 
         <div className="w-9 h-9 rounded-full bg-slate-200 border border-border flex items-center justify-center text-primary text-xs font-bold cursor-pointer hover:border-primary-light transition-all overflow-hidden">
           {user?.user_metadata?.avatar_url ? (

@@ -221,7 +221,7 @@ const WorkerDashboard = () => {
               <History className="w-4 h-4" />
               Histórico Recente
             </div>
-            <button className="text-xs font-semibold text-primary-light hover:underline cursor-pointer">Ver Todos</button>
+            <button onClick={() => navigate('/worker-leaves')} className="text-xs font-semibold text-primary-light hover:underline cursor-pointer">Ver Todos</button>
           </div>
           <div className="flex-1 overflow-x-auto">
             <table className="w-full text-left text-sm">

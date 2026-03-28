@@ -89,6 +89,11 @@ const MainLayout = () => {
     return 'Nha Féria';
   };
 
+  // Route guard: only managers can access /manager-dashboard
+  if (profile && location.pathname === '/manager-dashboard' && profile.role !== 'manager') {
+    return <Navigate to="/worker-dashboard" replace />;
+  }
+
   return (
     <div className="min-h-screen bg-bg flex">
       {sidebarOpen && (
@@ -99,7 +104,7 @@ const MainLayout = () => {
       )}
       <Sidebar profile={profile} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 md:ml-[240px] flex flex-col">
-        <TopBar title={getTitle()} user={session.user} onMenuClick={() => setSidebarOpen(true)} />
+        <TopBar title={getTitle()} user={session.user} profile={profile} onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 p-6 md:p-8">
           <AnimatePresence mode="wait">
             <motion.div
