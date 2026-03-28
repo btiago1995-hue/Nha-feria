@@ -127,6 +127,9 @@ export const translations = {
       roleEmployee: 'Colaborador',
       roleManager: 'Gestor',
       roleAdmin: 'Administrador',
+      chooseAvatar: 'O Teu Avatar',
+      avatarHint: 'Escolhe um emoji para personalizar o teu perfil.',
+      removeAvatar: '× Remover avatar',
     },
     // Settings
     settings: {
@@ -271,6 +274,9 @@ export const translations = {
       roleEmployee: 'Employee',
       roleManager: 'Manager',
       roleAdmin: 'Administrator',
+      chooseAvatar: 'Your Avatar',
+      avatarHint: 'Pick an emoji to personalise your profile.',
+      removeAvatar: '× Remove avatar',
     },
     settings: {
       title: 'Settings',

@@ -25,9 +25,14 @@ const SettingsPage = () => {
   const { session } = useOutletContext();
   const { lang, switchLang, t } = useLanguage();
 
-  const [notifPedidos,  setNotifPedidos]  = useState(true);
-  const [notifAprov,    setNotifAprov]    = useState(true);
-  const [notifLembrete, setNotifLembrete] = useState(false);
+  const [notifPedidos,  setNotifPedidos]  = useState(() => localStorage.getItem('nha_feria_notif_pedidos')  !== 'false');
+  const [notifAprov,    setNotifAprov]    = useState(() => localStorage.getItem('nha_feria_notif_aprov')    !== 'false');
+  const [notifLembrete, setNotifLembrete] = useState(() => localStorage.getItem('nha_feria_notif_lembrete') === 'true');
+
+  const persist = (key, setter) => (val) => {
+    setter(val);
+    localStorage.setItem(key, String(val));
+  };
   const [resetSent,     setResetSent]     = useState(false);
   const [resetLoading,  setResetLoading]  = useState(false);
 
@@ -67,9 +72,9 @@ const SettingsPage = () => {
         </div>
         <div className="divide-y divide-border">
           {[
-            { label: s('newPending'),     sub: s('newPendingDesc'),     val: notifPedidos,  set: setNotifPedidos },
-            { label: s('approvalStatus'), sub: s('approvalStatusDesc'), val: notifAprov,    set: setNotifAprov   },
-            { label: s('balanceReminder'), sub: s('balanceReminderDesc'), val: notifLembrete, set: setNotifLembrete },
+            { label: s('newPending'),     sub: s('newPendingDesc'),     val: notifPedidos,  set: persist('nha_feria_notif_pedidos',  setNotifPedidos)  },
+            { label: s('approvalStatus'), sub: s('approvalStatusDesc'), val: notifAprov,    set: persist('nha_feria_notif_aprov',    setNotifAprov)    },
+            { label: s('balanceReminder'), sub: s('balanceReminderDesc'), val: notifLembrete, set: persist('nha_feria_notif_lembrete', setNotifLembrete) },
           ].map((item, i) => (
             <div key={i} className="flex items-center justify-between gap-4 px-6 py-4">
               <div className="min-w-0">

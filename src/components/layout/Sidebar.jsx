@@ -123,8 +123,13 @@ const Sidebar = ({ profile, isOpen, onClose }) => {
 
       <div className="p-4 border-t border-white/10 bg-black/10 backdrop-blur-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent/50 to-primary-light/50 border border-white/10 flex items-center justify-center text-white text-xs font-bold shadow-lg">
-            {profile?.full_name?.charAt(0) || 'U'}
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent/50 to-primary-light/50 border border-white/10 flex items-center justify-center text-white text-xs font-bold shadow-lg overflow-hidden">
+            {(() => {
+              const emoji = profile?.id ? localStorage.getItem(`nha_feria_avatar_${profile.id}`) : null;
+              return emoji
+                ? <span className="text-xl leading-none">{emoji}</span>
+                : (profile?.full_name?.charAt(0) || 'U');
+            })()}
           </div>
           <div className="overflow-hidden">
             <div className="text-xs font-bold text-white truncate">{profile?.full_name || 'Usuário'}</div>

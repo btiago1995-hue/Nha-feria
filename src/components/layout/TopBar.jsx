@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Bell, Menu } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { format, parseISO } from 'date-fns';
 import { pt } from 'date-fns/locale';
 
 const TopBar = ({ title, user, profile, onMenuClick }) => {
+  const navigate = useNavigate();
   const today = new Date().toLocaleDateString('pt-PT', {
     weekday: 'long',
     day: 'numeric',
@@ -111,14 +113,26 @@ const TopBar = ({ title, user, profile, onMenuClick }) => {
               ) : (
                 <ul className="divide-y divide-border max-h-64 overflow-y-auto">
                   {notifications.map(n => (
-                    <li key={n.id} className="px-4 py-3 hover:bg-bg transition-colors">
-                      <div className="flex items-start gap-2.5">
-                        <span className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${n.dot}`} />
-                        <div>
-                          <p className="text-xs font-semibold text-text">{n.text}</p>
-                          <p className="text-[11px] text-text-muted mt-0.5">{n.sub}</p>
+                    <li key={n.id}>
+                      <button
+                        className="w-full text-left px-4 py-3 hover:bg-bg transition-colors cursor-pointer"
+                        onClick={() => {
+                          setNotifOpen(false);
+                          if (profile?.role === 'manager' || profile?.role === 'admin') {
+                            navigate('/manager-calendar');
+                          } else {
+                            navigate('/worker-leaves', { state: { tab: 'history' } });
+                          }
+                        }}
+                      >
+                        <div className="flex items-start gap-2.5">
+                          <span className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${n.dot}`} />
+                          <div>
+                            <p className="text-xs font-semibold text-text">{n.text}</p>
+                            <p className="text-[11px] text-text-muted mt-0.5">{n.sub}</p>
+                          </div>
                         </div>
-                      </div>
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -127,13 +141,18 @@ const TopBar = ({ title, user, profile, onMenuClick }) => {
           )}
         </div>
 
-        <div className="w-9 h-9 rounded-full bg-slate-200 border border-border flex items-center justify-center text-primary text-xs font-bold cursor-pointer hover:border-primary-light transition-all overflow-hidden">
-          {user?.user_metadata?.avatar_url ? (
-            <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-          ) : (
-            <span>{user?.email?.[0].toUpperCase() || 'U'}</span>
-          )}
-        </div>
+        <button
+          onClick={() => navigate('/profile')}
+          className="w-9 h-9 rounded-full bg-slate-200 border border-border flex items-center justify-center text-primary text-xs font-bold cursor-pointer hover:border-primary-light transition-all overflow-hidden"
+          title="Ver perfil"
+        >
+          {(() => {
+            const emoji = profile?.id ? localStorage.getItem(`nha_feria_avatar_${profile.id}`) : null;
+            if (emoji) return <span className="text-lg leading-none">{emoji}</span>;
+            if (user?.user_metadata?.avatar_url) return <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />;
+            return <span>{profile?.full_name?.charAt(0)?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}</span>;
+          })()}
+        </button>
       </div>
     </header>
   );
