@@ -84,8 +84,8 @@ const MainLayout = () => {
     if (location.pathname.includes('calendar')) return 'Mapa de Férias Global';
     if (location.pathname.includes('leaves')) return 'As Minhas Férias';
     if (location.pathname.includes('compliance') || location.pathname.includes('reports')) return 'Relatórios e Conformidade';
-    if (location.pathname.includes('profile')) return 'O Teu Perfil';
-    if (location.pathname.includes('settings')) return 'Configurações de Sistema';
+    if (location.pathname === '/profile') return 'O Teu Perfil';
+    if (location.pathname === '/settings') return 'Definições';
     return 'Nha Féria';
   };
 
