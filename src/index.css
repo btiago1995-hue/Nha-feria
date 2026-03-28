@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1A3A5C;
+  --color-primary-light: #2563EB;
+  --color-accent: #F59E0B;
+  --color-accent-hover: #D97706;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-bg: #F1F5F9;
+  --color-surface: #FFFFFF;
+  --color-text: #0F172A;
+  --color-text-muted: #64748B;
+  --color-text-light: #94A3B8;
+  --color-border: #E2E8F0;
+
+  --font-sans: "Plus Jakarta Sans", "system-ui", "sans-serif";
+  --font-display: "Plus Jakarta Sans", "system-ui", "sans-serif";
+
+  --radius-radius: 14px;
+  --radius-radius-sm: 8px;
+
+  --shadow-premium: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+  --shadow-card: 0 0 0 1px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.06);
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-text font-sans antialiased selection:bg-primary-light/10 selection:text-primary-light;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight font-bold;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20;
+  }
+  
+  .shadow-premium {
+    box-shadow: var(--shadow-premium);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-light;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
