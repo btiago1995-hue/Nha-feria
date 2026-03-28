@@ -70,6 +70,32 @@ export const translations = {
       globalLeaveMap: 'Mapa de Férias Global – 2026',
       allDepts: 'Todos os Departamentos',
       complianceTitle: 'Relatórios de Conformidade Laboral',
+      // Stats
+      avgTeamBalance: 'Saldo Médio da Equipa',
+      avgAvailableDays: 'Dias médios disponíveis',
+      approvalRate: 'Taxa de aprovação',
+      daysLabel: 'dias',
+      atRisk: 'em risco',
+      // Accumulation
+      accumWarning: '{name} tem {days} dias acumulados — risco de ultrapassar o limite legal de 44 dias.',
+      noAccumAlerts: 'Nenhum colaborador em risco de acumulação.',
+      // Toasts
+      approveSuccess: 'Pedido aprovado com sucesso.',
+      rejectSuccess: 'Pedido recusado.',
+      approveError: 'Erro ao aprovar. Verifica as tuas permissões.',
+      rejectError: 'Erro ao recusar. Verifica as tuas permissões.',
+      exportDone: 'Ficheiro CSV exportado.',
+      // Calendar
+      yearView: 'Ano Civil 2026',
+      cvHolidays: 'Cabo Verde — 11 Feriados Nacionais',
+      monthly: 'Mensal',
+      quarterly: 'Trimestral',
+      annual: 'Anual',
+      ganttTip: 'As cores indicam o departamento de cada colaborador. As datas sombreadas são fins de semana e feriados nacionais, não contabilizados no saldo de férias.',
+      absentsToday: 'Pessoas Ausentes',
+      nextLeave: 'Próximas Férias',
+      availabilityRate: 'Taxa de Disponibilidade',
+      noUpcoming: 'Nenhuma próxima',
     },
     // Worker Leaves
     workerLeaves: {
@@ -220,6 +246,32 @@ export const translations = {
       globalLeaveMap: 'Global Leave Map – 2026',
       allDepts: 'All Departments',
       complianceTitle: 'Labour Compliance Reports',
+      // Stats
+      avgTeamBalance: 'Team Average Balance',
+      avgAvailableDays: 'Average available days',
+      approvalRate: 'Approval rate',
+      daysLabel: 'days',
+      atRisk: 'at risk',
+      // Accumulation
+      accumWarning: '{name} has {days} days accumulated — risk of exceeding the legal limit of 44 days.',
+      noAccumAlerts: 'No workers at risk of accumulation.',
+      // Toasts
+      approveSuccess: 'Request approved successfully.',
+      rejectSuccess: 'Request rejected.',
+      approveError: 'Error approving. Check your permissions.',
+      rejectError: 'Error rejecting. Check your permissions.',
+      exportDone: 'CSV file exported.',
+      // Calendar
+      yearView: 'Calendar Year 2026',
+      cvHolidays: 'Cape Verde — 11 National Holidays',
+      monthly: 'Monthly',
+      quarterly: 'Quarterly',
+      annual: 'Annual',
+      ganttTip: 'Colours indicate each worker\'s department. Shaded dates are weekends and national holidays, not counted in the leave balance.',
+      absentsToday: 'People Absent',
+      nextLeave: 'Next Leave',
+      availabilityRate: 'Availability Rate',
+      noUpcoming: 'None upcoming',
     },
     workerLeaves: {
       title: 'My Leaves',

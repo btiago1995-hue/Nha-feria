@@ -1,62 +1,68 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Users,
-  Calendar,
-  Download,
-  FileText,
-  AlertTriangle,
-  History,
-  Inbox,
-  Sun,
-  BarChart2,
-  ClipboardList,
-  CheckCircle2,
+  Users, Calendar, Download, FileText, AlertTriangle,
+  History, Inbox, Sun, BarChart2, ClipboardList,
+  CheckCircle2, X,
 } from 'lucide-react';
 import SumCard from '../components/ui/SumCard';
 import ApprovalList from '../components/ui/ApprovalList';
 import GanttChart from '../components/ui/GanttChart';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '../lib/LanguageContext';
+import { getBusinessDays } from '../utils/dateUtils';
+import { format, parseISO } from 'date-fns';
+import { pt, enGB } from 'date-fns/locale';
 
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08 }
-  }
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
 };
-
 const itemVariants = {
   hidden: { y: 16, opacity: 0 },
-  visible: { y: 0, opacity: 1, transition: { duration: 0.3, ease: 'easeOut' } }
+  visible: { y: 0, opacity: 1, transition: { duration: 0.3, ease: 'easeOut' } },
 };
 
 const ManagerDashboard = () => {
   const { profile } = useOutletContext();
   const navigate = useNavigate();
+  const { t, lang } = useLanguage();
+  const m = (key, vars) => t('managerDashboard', key, vars);
+  const dateLocale = lang === 'en' ? enGB : pt;
 
-  const [requests, setRequests] = useState([]);
-  const [teamProfiles, setTeamProfiles] = useState([]);
-  const [ganttData, setGanttData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [requests, setRequests]       = useState([]);
+  const [ganttData, setGanttData]     = useState([]);
+  const [loading, setLoading]         = useState(true);
+  const [toast, setToast]             = useState(null); // { msg, type: 'success'|'error' }
+  const [stats, setStats] = useState({
+    pendingCount: 0,
+    offToday: 0,
+    teamSize: 0,
+    avgBalance: '—',
+    approvalRate: 0,
+    accumAlerts: [],
+  });
 
-  useEffect(() => {
-    fetchManagerData();
-  }, []);
+  const showToast = (msg, type = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  useEffect(() => { fetchManagerData(); }, []);
 
   const fetchManagerData = async () => {
     setLoading(true);
     try {
+      // 1. Pending requests
       const { data: pendingReqs, error: reqError } = await supabase
         .from('leave_requests')
-        .select('*, profiles!leave_requests_user_id_fkey(full_name, avatar_url)')
+        .select('*, profiles!leave_requests_user_id_fkey(full_name)')
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
-
       if (reqError) throw reqError;
 
-      const formattedRequests = pendingReqs.map(r => ({
+      const formattedRequests = (pendingReqs || []).map(r => ({
         id: r.id,
         workerName: r.profiles?.full_name || 'Desconhecido',
         avatar: r.profiles?.full_name?.charAt(0) || 'U',
@@ -64,31 +70,58 @@ const ManagerDashboard = () => {
         endDate: r.end_date,
         type: r.type,
         status: r.status,
-        description: r.description
+        description: r.description,
+        days: getBusinessDays(r.start_date, r.end_date),
       }));
       setRequests(formattedRequests);
 
-      const { data: profiles, error: profileError } = await supabase
-        .from('profiles')
-        .select('*');
-      if (profileError) throw profileError;
-      setTeamProfiles(profiles || []);
+      // 2. All profiles for team size + avg balance + accumulation
+      const { data: profilesData } = await supabase.from('profiles').select('*');
+      const profiles = profilesData || [];
 
-      const { data: approvedReqs, error: approvedError } = await supabase
+      // 3. Approved requests for Gantt + who's off today
+      const { data: approvedReqs } = await supabase
         .from('leave_requests')
-        .select('*, profiles!leave_requests_user_id_fkey(full_name)')
+        .select('start_date, end_date, profiles!leave_requests_user_id_fkey(full_name)')
         .eq('status', 'approved');
 
-      if (approvedError) throw approvedError;
-
-      const grouped = approvedReqs.reduce((acc, curr) => {
-        const userName = curr.profiles?.full_name || 'Usuário';
-        if (!acc[userName]) acc[userName] = { name: userName, avatar: userName.charAt(0), requests: [] };
-        acc[userName].requests.push({ startDate: curr.start_date, endDate: curr.end_date });
+      const grouped = (approvedReqs || []).reduce((acc, r) => {
+        const name = r.profiles?.full_name || 'Utilizador';
+        if (!acc[name]) acc[name] = { name, avatar: name.charAt(0), requests: [] };
+        acc[name].requests.push({ startDate: r.start_date, endDate: r.end_date });
         return acc;
       }, {});
-      setGanttData(Object.values(grouped));
+      const ganttRows = Object.values(grouped);
+      setGanttData(ganttRows);
 
+      // 4. Decided requests for approval rate
+      const { data: decidedReqs } = await supabase
+        .from('leave_requests')
+        .select('status')
+        .in('status', ['approved', 'rejected']);
+      const approvedCount = (decidedReqs || []).filter(r => r.status === 'approved').length;
+      const approvalRate = decidedReqs?.length > 0
+        ? Math.round(approvedCount / decidedReqs.length * 100)
+        : 0;
+
+      // 5. Compute derived stats
+      const today = new Date().toISOString().split('T')[0];
+      const offToday = ganttRows.filter(u =>
+        u.requests.some(r => today >= r.startDate && today <= r.endDate)
+      ).length;
+      const avgBalance = profiles.length > 0
+        ? (profiles.reduce((sum, p) => sum + (p.vacation_balance || 0), 0) / profiles.length).toFixed(1)
+        : '—';
+      const accumAlerts = profiles.filter(p => (p.vacation_balance || 0) > 30);
+
+      setStats({
+        pendingCount: formattedRequests.length,
+        offToday,
+        teamSize: profiles.length,
+        avgBalance,
+        approvalRate,
+        accumAlerts,
+      });
     } catch (err) {
       console.error('Error fetching manager data:', err);
     } finally {
@@ -103,14 +136,13 @@ const ManagerDashboard = () => {
         .update({ status: 'approved', approved_by: profile.id })
         .eq('id', id)
         .select();
-
       if (error) throw error;
-      if (!data || data.length === 0) throw new Error('Sem permissão para aprovar pedidos.');
-      setRequests(requests.filter(r => r.id !== id));
+      if (!data || data.length === 0) throw new Error('no permission');
+      setRequests(prev => prev.filter(r => r.id !== id));
+      showToast(m('approveSuccess'));
       fetchManagerData();
-      alert('Pedido aprovado com sucesso!');
-    } catch (err) {
-      alert('Erro ao aprovar pedido: ' + (err.message || 'Sem permissão.'));
+    } catch {
+      showToast(m('approveError'), 'error');
     }
   };
 
@@ -121,24 +153,37 @@ const ManagerDashboard = () => {
         .update({ status: 'rejected', approved_by: profile.id })
         .eq('id', id)
         .select();
-
       if (error) throw error;
-      if (!data || data.length === 0) throw new Error('Sem permissão para recusar pedidos.');
-      setRequests(requests.filter(r => r.id !== id));
-      alert('Pedido recusado.');
-    } catch (err) {
-      alert('Erro ao recusar pedido: ' + (err.message || 'Sem permissão.'));
+      if (!data || data.length === 0) throw new Error('no permission');
+      setRequests(prev => prev.filter(r => r.id !== id));
+      showToast(m('rejectSuccess'));
+    } catch {
+      showToast(m('rejectError'), 'error');
     }
   };
 
-  const stats = {
-    pendingCount: requests.length,
-    teamSize: teamProfiles.length,
-    offToday: ganttData.filter(u => u.requests.some(r => {
-      const today = new Date().toISOString().split('T')[0];
-      return today >= r.startDate && today <= r.endDate;
-    })).length
+  const handleExport = () => {
+    const rows = [['Colaborador', 'Início', 'Fim', 'Dias Úteis']];
+    ganttData.forEach(worker =>
+      worker.requests.forEach(r =>
+        rows.push([worker.name, r.startDate, r.endDate, getBusinessDays(r.startDate, r.endDate)])
+      )
+    );
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ferias-2026.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(m('exportDone'));
   };
+
+  const today = new Date().toISOString().split('T')[0];
+  const offTodayList = ganttData.filter(u =>
+    u.requests.some(r => today >= r.startDate && today <= r.endDate)
+  );
 
   return (
     <motion.div
@@ -147,15 +192,42 @@ const ManagerDashboard = () => {
       animate="visible"
       className="space-y-7 max-w-[1240px] mx-auto pb-20"
     >
+      {/* Global toast */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.97 }}
+            transition={{ duration: 0.2 }}
+            className={`fixed top-20 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-radius-sm shadow-lg border text-sm font-semibold
+              ${toast.type === 'success'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                : 'bg-red-50 border-red-200 text-red-800'}`}
+          >
+            {toast.type === 'success'
+              ? <CheckCircle2 size={16} className="flex-shrink-0" />
+              : <AlertTriangle size={16} className="flex-shrink-0" />}
+            {toast.msg}
+            <button onClick={() => setToast(null)} className="ml-1 opacity-60 hover:opacity-100 cursor-pointer">
+              <X size={13} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h2 className="text-2xl font-bold text-text text-gradient">Visão Geral de Gestão</h2>
-          <p className="text-sm text-text-muted">Disponibilidade e conformidade da equipa em tempo real.</p>
+          <h2 className="text-2xl font-bold text-text text-gradient">{m('title')}</h2>
+          <p className="text-sm text-text-muted">{m('subtitle')}</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 border border-border rounded-radius-sm text-sm font-semibold hover:bg-bg hover:border-text/10 transition-all shadow-sm active:scale-95 cursor-pointer">
+        <button
+          onClick={handleExport}
+          className="flex items-center gap-2 px-4 py-2 border border-border rounded-radius-sm text-sm font-semibold hover:bg-bg hover:border-text/10 transition-all shadow-sm active:scale-95 cursor-pointer"
+        >
           <Download size={15} />
-          Exportar Relatório 2026
+          {m('exportReport')}
         </button>
       </motion.div>
 
@@ -164,109 +236,119 @@ const ManagerDashboard = () => {
         <SumCard
           icon={<Inbox className="w-5 h-5" />}
           value={stats.pendingCount}
-          label="Pedidos Pendentes"
-          trend="Aguardam aprovação"
+          label={m('pendingRequests')}
+          trend={m('awaitingApproval')}
           trendColor="warn"
         />
         <SumCard
           icon={<Sun className="w-5 h-5" />}
           value={stats.offToday}
-          label="De férias hoje"
-          trend="Sincronizado"
+          label={m('onLeaveToday')}
+          trend={m('synced')}
           trendColor="success"
         />
         <SumCard
           icon={<Users className="w-5 h-5" />}
           value={stats.teamSize}
-          label="Equipa Ativa"
-          trend="Utilizadores"
+          label={m('activeTeam')}
+          trend={m('users')}
           trendColor="muted"
         />
         <SumCard
           icon={<AlertTriangle className="w-5 h-5" />}
-          value="0"
-          label="Alertas de Acumulação"
-          trend="Zero riscos"
-          trendColor="success"
+          value={stats.accumAlerts.length}
+          label={m('accumAlerts')}
+          trend={stats.accumAlerts.length === 0 ? m('zeroRisk') : `${stats.accumAlerts.length} ${m('atRisk')}`}
+          trendColor={stats.accumAlerts.length === 0 ? 'success' : 'warn'}
         />
       </motion.div>
 
       {/* Approvals + Who's Off */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Approval List */}
         <motion.div variants={itemVariants} className="bg-white rounded-radius border border-border shadow-sm flex flex-col">
           <div className="px-6 py-4 border-b border-border flex items-center justify-between">
             <div className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
               <History size={15} />
-              Pedidos de Aprovação
+              {m('approvalRequests')}
             </div>
-            <button onClick={() => navigate('/manager-calendar')} className="text-xs font-semibold text-primary-light hover:underline cursor-pointer">Ver Todos</button>
+            <button
+              onClick={() => navigate('/manager-calendar')}
+              className="text-xs font-semibold text-primary-light hover:underline cursor-pointer"
+            >
+              {m('viewAll')}
+            </button>
           </div>
-          <div className="p-5">
+          <div className="p-5 flex-1">
             <ApprovalList requests={requests} onApprove={handleApprove} onReject={handleReject} />
 
-            <motion.div
-              initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="mt-5 p-4 bg-amber-50 border border-amber-200 rounded-radius-sm flex gap-3 items-start"
-            >
-              <AlertTriangle className="text-amber-600 flex-shrink-0 mt-0.5" size={16} />
-              <p className="text-xs text-amber-800 leading-relaxed">
-                <strong>Pedro Tavares</strong> tem 38 dias acumulados. Risco de ultrapassar o limite legal de 44 dias em Cabo Verde.
-              </p>
-            </motion.div>
+            {/* Accumulation alerts */}
+            {stats.accumAlerts.length > 0 && (
+              <div className="mt-4 space-y-2">
+                {stats.accumAlerts.map((p) => (
+                  <div key={p.id} className="p-3 bg-amber-50 border border-amber-200 rounded-radius-sm flex gap-2.5 items-start">
+                    <AlertTriangle className="text-amber-600 flex-shrink-0 mt-0.5" size={14} />
+                    <p className="text-xs text-amber-800 leading-relaxed">
+                      {m('accumWarning', { name: p.full_name, days: p.vacation_balance })}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </motion.div>
 
         {/* Who's off + Stats */}
         <div className="space-y-5">
-          <div className="bg-white rounded-radius border border-border shadow-sm p-5">
-            <div className="flex items-center justify-between mb-5">
+          {/* Who's off today */}
+          <motion.div variants={itemVariants} className="bg-white rounded-radius border border-border shadow-sm p-5">
+            <div className="flex items-center justify-between mb-4">
               <div className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
                 <Calendar size={15} />
-                Quem está de férias hoje
+                {m('whoIsOff')}
               </div>
-              <span className="text-xs text-text-muted">24 Mar 2026</span>
+              <span className="text-xs text-text-muted">
+                {format(new Date(), 'd MMM yyyy', { locale: dateLocale })}
+              </span>
             </div>
             <div className="space-y-2">
-              {stats.offToday > 0 ? (
-                ganttData.filter(u => u.requests.some(r => {
-                  const today = new Date().toISOString().split('T')[0];
-                  return today >= r.startDate && today <= r.endDate;
-                })).map((item, idx) => (
+              {offTodayList.length > 0 ? (
+                offTodayList.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-3 p-3 bg-bg rounded-radius-sm hover:bg-bg/80 transition-colors">
                     <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
                       {item.avatar}
                     </div>
                     <div className="flex-1">
                       <div className="text-sm font-semibold text-text leading-tight">{item.name}</div>
-                      <div className="text-xs text-text-muted">Em férias</div>
+                      <div className="text-xs text-text-muted">{m('onLeave')}</div>
                     </div>
                   </div>
                 ))
               ) : (
                 <div className="py-8 text-center text-xs text-text-muted bg-bg/30 border border-dashed border-border rounded-radius-sm">
-                  Ninguém está ausente hoje.
+                  {m('noOneAbsent')}
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
 
-          <div className="bg-white rounded-radius border border-border shadow-sm p-5">
+          {/* Team stats */}
+          <motion.div variants={itemVariants} className="bg-white rounded-radius border border-border shadow-sm p-5">
             <div className="text-xs font-bold text-text-muted uppercase tracking-wider mb-4 flex items-center gap-2">
               <BarChart2 size={15} />
-              Saldo Médio da Equipa
+              {m('avgTeamBalance')}
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="p-4 bg-bg rounded-radius-sm text-center">
-                <div className="text-2xl font-bold text-primary">19.4</div>
-                <div className="text-xs text-text-muted mt-1">Dias médios disponíveis</div>
+                <div className="text-2xl font-bold text-primary">{loading ? '…' : stats.avgBalance}</div>
+                <div className="text-xs text-text-muted mt-1">{m('avgAvailableDays')}</div>
               </div>
               <div className="p-4 bg-bg rounded-radius-sm text-center">
-                <div className="text-2xl font-bold text-emerald-600">87%</div>
-                <div className="text-xs text-text-muted mt-1">Taxa de aprovação</div>
+                <div className="text-2xl font-bold text-emerald-600">{loading ? '…' : `${stats.approvalRate}%`}</div>
+                <div className="text-xs text-text-muted mt-1">{m('approvalRate')}</div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
@@ -275,25 +357,24 @@ const ManagerDashboard = () => {
         <div className="px-6 py-4 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
             <Calendar size={15} />
-            Mapa de Férias Global – 2026
+            {m('globalLeaveMap')}
           </div>
           <select className="bg-bg border border-border rounded-radius-sm px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-light/30 cursor-pointer">
-            <option>Todos os Departamentos</option>
+            <option>{m('allDepts')}</option>
             <option>TI</option>
             <option>Comercial</option>
             <option>Financeiro</option>
           </select>
         </div>
         <div className="p-5">
-          <GanttChart data={ganttData} />
-
-          <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 pt-4 border-t border-border">
-            <LegendItem color="#3B82F6" label="Vendas" />
-            <LegendItem color="#F59E0B" label="TI" />
-            <LegendItem color="#10B981" label="Operações" />
-            <LegendItem color="#7C3AED" label="RH" />
-            <LegendItem color="#EF4444" label="Contabilidade" />
-          </div>
+          {loading ? (
+            <div className="py-10 text-center text-xs text-text-muted">
+              <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-2" />
+              A carregar mapa…
+            </div>
+          ) : (
+            <GanttChart data={ganttData} />
+          )}
         </div>
       </motion.div>
 
@@ -301,7 +382,7 @@ const ManagerDashboard = () => {
       <motion.div variants={itemVariants} className="space-y-4">
         <div className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
           <FileText size={15} />
-          Relatórios de Conformidade Laboral
+          {m('complianceTitle')}
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <ReportCard
@@ -309,19 +390,22 @@ const ManagerDashboard = () => {
             title="Mapa de Férias Anual"
             desc="Gera e exporta o mapa anual obrigatório (Código Laboral CV)."
             btnText="Exportar PDF"
+            onAction={() => showToast('Exportação PDF em breve disponível.')}
           />
           <ReportCard
             icon={<ClipboardList className="w-6 h-6 text-primary-light" />}
             title="Relatório DGT"
             desc="Dados formatados para a Direção Geral do Trabalho."
             btnText="Exportar DGT"
+            onAction={() => showToast('Exportação DGT em breve disponível.')}
           />
           <ReportCard
             icon={<AlertTriangle className="w-6 h-6 text-accent" />}
             title="Alertas de Acumulação"
-            desc="Trabalhadores próximos do limite legal de 44 dias."
-            btnText="Ver Alertas"
+            desc={`${stats.accumAlerts.length} colaborador(es) próximo(s) do limite legal de 44 dias.`}
+            btnText={`Ver ${stats.accumAlerts.length} Alerta(s)`}
             btnColor="accent"
+            onAction={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           />
         </div>
       </motion.div>
@@ -329,20 +413,16 @@ const ManagerDashboard = () => {
   );
 };
 
-const LegendItem = ({ color, label }) => (
-  <div className="flex items-center gap-1.5">
-    <div className="w-5 h-2 rounded-full" style={{ backgroundColor: color }} />
-    <span className="text-xs text-text-muted font-medium">{label}</span>
-  </div>
-);
-
-const ReportCard = ({ icon, title, desc, btnText, btnColor = 'primary' }) => (
+const ReportCard = ({ icon, title, desc, btnText, btnColor = 'primary', onAction }) => (
   <div className="bg-white border border-border rounded-radius p-5 hover:shadow-md transition-all group">
     <div className="mb-3">{icon}</div>
     <h4 className="text-sm font-bold text-text mb-1 group-hover:text-primary-light transition-colors">{title}</h4>
     <p className="text-xs text-text-muted leading-relaxed mb-5">{desc}</p>
-    <button className={`w-full py-2.5 rounded-radius-sm text-xs font-bold text-white transition-all cursor-pointer
-      ${btnColor === 'accent' ? 'bg-accent hover:bg-accent-hover' : 'bg-primary hover:bg-primary-light'}`}>
+    <button
+      onClick={onAction}
+      className={`w-full py-2.5 rounded-radius-sm text-xs font-bold text-white transition-all cursor-pointer active:scale-95
+        ${btnColor === 'accent' ? 'bg-accent hover:bg-accent-hover' : 'bg-primary hover:bg-primary-light'}`}
+    >
       {btnText}
     </button>
   </div>
