@@ -1,9 +1,9 @@
 import React from 'react';
 import { ClipboardList, AlertCircle } from 'lucide-react';
 
-const VacationBalanceCard = ({ profile, pendingDays = 0 }) => {
+const VacationBalanceCard = ({ profile, pendingDays = 0, usedDays = 0 }) => {
   const totalEntitlement = 22;
-  const used = 7; // Mock — will come from DB
+  const used = usedDays;
   const available = Math.max(0, totalEntitlement - used - pendingDays);
 
   const usedPct     = (used / totalEntitlement) * 100;

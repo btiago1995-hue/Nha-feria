@@ -7,6 +7,7 @@ import { useOutletContext, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { format, parseISO, eachDayOfInterval } from 'date-fns';
 import { pt } from 'date-fns/locale';
+import { getBusinessDays } from '../utils/dateUtils';
 import { motion } from 'framer-motion';
 
 const containerVariants = {
@@ -98,10 +99,13 @@ const WorkerDashboard = () => {
     }
   };
 
+  const sumDays = (reqs) =>
+    reqs.reduce((total, r) => total + getBusinessDays(r.start_date, r.end_date), 0);
+
   const stats = {
     available: profile?.vacation_balance || 22,
-    used:    requests.filter(r => r.status === 'approved').length,
-    pending: requests.filter(r => r.status === 'pending').length,
+    used:    sumDays(requests.filter(r => r.status === 'approved')),
+    pending: sumDays(requests.filter(r => r.status === 'pending')),
   };
 
   const getStatusBadge = (status) => {
@@ -155,7 +159,7 @@ const WorkerDashboard = () => {
       {/* Balance + Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <motion.div variants={itemVariants} className="lg:col-span-2">
-          <VacationBalanceCard profile={profile} pendingDays={stats.pending} />
+          <VacationBalanceCard profile={profile} pendingDays={stats.pending} usedDays={stats.used} />
         </motion.div>
 
         <motion.div variants={itemVariants} className="space-y-4">
@@ -236,7 +240,7 @@ const WorkerDashboard = () => {
                       {format(parseISO(item.start_date), 'd MMM')} – {format(parseISO(item.end_date), 'd MMM yyyy')}
                     </td>
                     <td className="px-5 py-4 text-text-muted capitalize text-sm">{item.type}</td>
-                    <td className="px-4 py-4 text-center font-semibold text-primary text-sm">–</td>
+                    <td className="px-4 py-4 text-center font-semibold text-primary text-sm">{getBusinessDays(item.start_date, item.end_date)}</td>
                     <td className="px-6 py-4 text-right">{getStatusBadge(item.status)}</td>
                   </tr>
                 )) : (
