@@ -1,64 +1,88 @@
 import React from 'react';
-import { ClipboardList, AlertCircle } from 'lucide-react';
+import { ClipboardList, AlertCircle, TrendingUp } from 'lucide-react';
 
 const VacationBalanceCard = ({ profile, pendingDays = 0, usedDays = 0 }) => {
   const totalEntitlement = 22;
   const used = usedDays;
   const available = Math.max(0, totalEntitlement - used - pendingDays);
 
-  const usedPct     = (used / totalEntitlement) * 100;
-  const pendingPct  = (pendingDays / totalEntitlement) * 100;
-  const availablePct = (available / totalEntitlement) * 100;
+  const usedPct     = Math.min((used / totalEntitlement) * 100, 100);
+  const pendingPct  = Math.min((pendingDays / totalEntitlement) * 100, 100 - usedPct);
+  const availablePct = Math.max(0, 100 - usedPct - pendingPct);
 
-  const segments = [
-    { label: 'Gozados',   value: used,        pct: usedPct,      color: 'bg-emerald-400' },
-    { label: 'Pendentes', value: pendingDays,  pct: pendingPct,   color: 'bg-amber-400'   },
-    { label: 'Disponíveis', value: available,  pct: availablePct, color: 'bg-white/40'    },
-  ];
+  const usedPctDisplay = Math.round(usedPct);
 
   return (
-    <div className="bg-gradient-to-br from-primary to-primary-light rounded-radius p-6 text-white relative overflow-hidden shadow-lg">
-      {/* Decorative blobs */}
-      <div className="absolute -top-10 -right-10 w-[180px] h-[180px] bg-white/5 rounded-full pointer-events-none" />
-      <div className="absolute -bottom-12 right-8 w-[120px] h-[120px] bg-accent/10 rounded-full pointer-events-none" />
+    <div className="bg-gradient-to-br from-primary via-[#1e4470] to-primary-light rounded-radius p-6 text-white relative overflow-hidden shadow-lg h-full flex flex-col">
+      {/* Decorative elements */}
+      <div className="absolute -top-12 -right-12 w-[200px] h-[200px] bg-white/5 rounded-full pointer-events-none" />
+      <div className="absolute -bottom-16 right-4 w-[140px] h-[140px] bg-accent/10 rounded-full pointer-events-none" />
+      <div className="absolute top-1/2 -left-8 w-[80px] h-[80px] bg-white/3 rounded-full pointer-events-none" />
 
       {/* Header */}
-      <div className="flex items-center gap-2 text-xs font-bold text-white/60 uppercase tracking-widest mb-5 relative z-10">
-        <ClipboardList size={15} />
+      <div className="flex items-center gap-2 text-xs font-bold text-white/50 uppercase tracking-widest mb-6 relative z-10">
+        <ClipboardList size={14} />
         Saldo de Férias 2026
       </div>
 
-      {/* Big number */}
-      <div className="relative z-10 mb-5">
-        <div className="flex items-baseline gap-2">
-          <span className="text-5xl font-bold leading-none">{available}</span>
-          <span className="text-base text-white/60 font-medium">/ {totalEntitlement} dias úteis</span>
+      {/* Big number + usage context */}
+      <div className="relative z-10 flex items-end justify-between mb-6">
+        <div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-6xl font-bold leading-none">{available}</span>
+            <div>
+              <div className="text-sm text-white/50 font-medium">/ {totalEntitlement}</div>
+              <div className="text-xs text-white/40">dias úteis</div>
+            </div>
+          </div>
+          <p className="text-sm text-white/60 mt-1.5">disponíveis este ano</p>
         </div>
-        <p className="text-sm text-white/70 mt-1">disponíveis este ano</p>
+        <div className="text-right">
+          <div className="flex items-center gap-1.5 text-white/60 text-xs font-semibold mb-1">
+            <TrendingUp size={12} />
+            Utilização
+          </div>
+          <div className="text-2xl font-bold">{usedPctDisplay}%</div>
+        </div>
       </div>
 
       {/* Segmented bar */}
-      <div className="relative z-10 mb-4">
-        <div className="flex h-3 rounded-full overflow-hidden gap-0.5 bg-white/10">
-          {segments.map((s) =>
-            s.pct > 0 ? (
-              <div
-                key={s.label}
-                className={`${s.color} transition-all duration-700 ease-out rounded-full`}
-                style={{ width: `${s.pct}%` }}
-                title={`${s.label}: ${s.value} dias`}
-              />
-            ) : null
+      <div className="relative z-10 mb-5">
+        <div className="flex h-2.5 rounded-full overflow-hidden gap-0.5 bg-white/10">
+          {usedPct > 0 && (
+            <div
+              className="bg-emerald-400 transition-all duration-700 ease-out"
+              style={{ width: `${usedPct}%` }}
+              title={`Gozados: ${used} dias`}
+            />
+          )}
+          {pendingPct > 0 && (
+            <div
+              className="bg-amber-400 transition-all duration-700 ease-out"
+              style={{ width: `${pendingPct}%` }}
+              title={`Pendentes: ${pendingDays} dias`}
+            />
+          )}
+          {availablePct > 0 && (
+            <div
+              className="bg-white/30 transition-all duration-700 ease-out rounded-r-full"
+              style={{ width: `${availablePct}%` }}
+              title={`Disponíveis: ${available} dias`}
+            />
           )}
         </div>
 
         {/* Legend */}
-        <div className="flex gap-5 mt-3">
-          {segments.map((s) => (
+        <div className="flex gap-4 mt-3">
+          {[
+            { label: 'Gozados',    value: used,        color: 'bg-emerald-400' },
+            { label: 'Pendentes',  value: pendingDays,  color: 'bg-amber-400'   },
+            { label: 'Disponíveis', value: available,   color: 'bg-white/40'    },
+          ].map((s) => (
             <div key={s.label} className="flex items-center gap-1.5">
               <span className={`w-2.5 h-2.5 rounded-sm flex-shrink-0 ${s.color}`} />
-              <span className="text-xs text-white/65">
-                {s.label} <strong className="text-white font-semibold">{s.value}</strong>
+              <span className="text-xs text-white/55">
+                {s.label} <strong className="text-white/90 font-semibold">{s.value}</strong>
               </span>
             </div>
           ))}
@@ -66,14 +90,14 @@ const VacationBalanceCard = ({ profile, pendingDays = 0, usedDays = 0 }) => {
       </div>
 
       {/* Detail rows */}
-      <div className="relative z-10 space-y-1 border-t border-white/10 pt-4 text-sm">
-        <div className="flex justify-between items-center py-1 border-b border-white/10">
-          <span className="text-white/65">Dias acumulados (ano passado)</span>
-          <span className="font-semibold">0 / 44 máx.</span>
+      <div className="relative z-10 space-y-0 border-t border-white/10 pt-4 text-sm flex-1">
+        <div className="flex justify-between items-center py-2 border-b border-white/10">
+          <span className="text-white/50 text-xs">Dias acumulados (ano passado)</span>
+          <span className="font-semibold text-sm">0 / 44 máx.</span>
         </div>
-        <div className="flex justify-between items-center py-1 border-b border-white/10">
-          <span className="text-white/65">Total do direito anual</span>
-          <span className="font-semibold">22 dias úteis</span>
+        <div className="flex justify-between items-center py-2">
+          <span className="text-white/50 text-xs">Total do direito anual</span>
+          <span className="font-semibold text-sm">22 dias úteis</span>
         </div>
       </div>
 

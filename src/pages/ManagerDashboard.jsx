@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Users, Calendar, Download, FileText, AlertTriangle,
   History, Inbox, Sun, BarChart2, ClipboardList,
-  CheckCircle2, X,
+  CheckCircle2, X, TrendingUp,
 } from 'lucide-react';
 import SumCard from '../components/ui/SumCard';
 import ApprovalList from '../components/ui/ApprovalList';
@@ -31,10 +31,12 @@ const ManagerDashboard = () => {
   const m = (key, vars) => t('managerDashboard', key, vars);
   const dateLocale = lang === 'en' ? enGB : pt;
 
-  const [requests, setRequests]       = useState([]);
-  const [ganttData, setGanttData]     = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [toast, setToast]             = useState(null); // { msg, type: 'success'|'error' }
+  const [requests, setRequests]         = useState([]);
+  const [ganttData, setGanttData]       = useState([]);
+  const [approvedReqs, setApprovedReqs] = useState([]);
+  const [deptFilter, setDeptFilter]     = useState('');
+  const [loading, setLoading]           = useState(true);
+  const [toast, setToast]               = useState(null);
   const [stats, setStats] = useState({
     pendingCount: 0,
     offToday: 0,
@@ -54,7 +56,6 @@ const ManagerDashboard = () => {
   const fetchManagerData = async () => {
     setLoading(true);
     try {
-      // 1. Pending requests
       const { data: pendingReqs, error: reqError } = await supabase
         .from('leave_requests')
         .select('*, profiles!leave_requests_user_id_fkey(full_name)')
@@ -75,26 +76,26 @@ const ManagerDashboard = () => {
       }));
       setRequests(formattedRequests);
 
-      // 2. All profiles for team size + avg balance + accumulation
       const { data: profilesData } = await supabase.from('profiles').select('*');
       const profiles = profilesData || [];
 
-      // 3. Approved requests for Gantt + who's off today
-      const { data: approvedReqs } = await supabase
+      const { data: approvedData } = await supabase
         .from('leave_requests')
-        .select('start_date, end_date, profiles!leave_requests_user_id_fkey(full_name)')
-        .eq('status', 'approved');
+        .select('start_date, end_date, type, description, profiles!leave_requests_user_id_fkey(full_name, department)')
+        .eq('status', 'approved')
+        .order('start_date', { ascending: true });
+      setApprovedReqs(approvedData || []);
 
-      const grouped = (approvedReqs || []).reduce((acc, r) => {
+      const grouped = (approvedData || []).reduce((acc, r) => {
         const name = r.profiles?.full_name || 'Utilizador';
-        if (!acc[name]) acc[name] = { name, avatar: name.charAt(0), requests: [] };
+        const dept = r.profiles?.department || '—';
+        if (!acc[name]) acc[name] = { name, department: dept, avatar: name.charAt(0), requests: [] };
         acc[name].requests.push({ startDate: r.start_date, endDate: r.end_date });
         return acc;
       }, {});
       const ganttRows = Object.values(grouped);
       setGanttData(ganttRows);
 
-      // 4. Decided requests for approval rate
       const { data: decidedReqs } = await supabase
         .from('leave_requests')
         .select('status')
@@ -104,7 +105,6 @@ const ManagerDashboard = () => {
         ? Math.round(approvedCount / decidedReqs.length * 100)
         : 0;
 
-      // 5. Compute derived stats
       const today = new Date().toISOString().split('T')[0];
       const offToday = ganttRows.filter(u =>
         u.requests.some(r => today >= r.startDate && today <= r.endDate)
@@ -162,25 +162,37 @@ const ManagerDashboard = () => {
     }
   };
 
-  const handleExport = () => {
-    const rows = [['Colaborador', 'Início', 'Fim', 'Dias Úteis']];
-    ganttData.forEach(worker =>
-      worker.requests.forEach(r =>
-        rows.push([worker.name, r.startDate, r.endDate, getBusinessDays(r.startDate, r.endDate)])
-      )
-    );
-    const csv = rows.map(r => r.join(',')).join('\n');
+  const downloadCsv = (rows, filename) => {
+    const csv = rows.map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = 'ferias-2026.csv';
-    a.click();
+    a.href = url; a.download = filename; a.click();
     URL.revokeObjectURL(url);
+  };
+  const buildRow = r => [
+    r.profiles?.full_name || '—',
+    r.profiles?.department || '—',
+    r.start_date, r.end_date,
+    r.type || '—',
+    getBusinessDays(r.start_date, r.end_date),
+  ];
+  const CSV_HEADER = ['Colaborador', 'Departamento', 'Início', 'Fim', 'Tipo', 'Dias Úteis'];
+
+  const exportMapaAnual = () => {
+    downloadCsv([CSV_HEADER, ...approvedReqs.map(buildRow)], 'mapa-ferias-2026.csv');
+    showToast(m('exportDone'));
+  };
+  const exportDGT = () => {
+    const q1 = approvedReqs.filter(r => r.start_date >= '2026-01-01' && r.start_date <= '2026-04-30');
+    downloadCsv([CSV_HEADER, ...q1.map(buildRow)], 'dgt-quadrimestral-q1-2026.csv');
     showToast(m('exportDone'));
   };
 
   const today = new Date().toISOString().split('T')[0];
+  const availableDepts = [...new Set(ganttData.map(w => w.department).filter(d => d && d !== '—'))].sort();
+  const filteredGanttData = deptFilter ? ganttData.filter(w => w.department === deptFilter) : ganttData;
+
   const offTodayList = ganttData.filter(u =>
     u.requests.some(r => today >= r.startDate && today <= r.endDate)
   );
@@ -218,13 +230,14 @@ const ManagerDashboard = () => {
 
       {/* Header */}
       <motion.div variants={itemVariants} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-0.5">
+          <p className="text-xs font-semibold text-primary-light uppercase tracking-widest">Gestão</p>
           <h2 className="text-2xl font-bold text-text text-gradient">{m('title')}</h2>
           <p className="text-sm text-text-muted">{m('subtitle')}</p>
         </div>
         <button
-          onClick={handleExport}
-          className="flex items-center gap-2 px-4 py-2 border border-border rounded-radius-sm text-sm font-semibold hover:bg-bg hover:border-text/10 transition-all shadow-sm active:scale-95 cursor-pointer"
+          onClick={exportMapaAnual}
+          className="flex items-center gap-2 px-4 py-2.5 bg-white border border-border rounded-radius-sm text-sm font-semibold hover:bg-bg hover:border-primary/20 transition-all shadow-sm active:scale-95 cursor-pointer"
         >
           <Download size={15} />
           {m('exportReport')}
@@ -263,7 +276,7 @@ const ManagerDashboard = () => {
         />
       </motion.div>
 
-      {/* Approvals + Who's Off */}
+      {/* Approvals + Who's Off + Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Approval List */}
         <motion.div variants={itemVariants} className="bg-white rounded-radius border border-border shadow-sm flex flex-col">
@@ -271,6 +284,11 @@ const ManagerDashboard = () => {
             <div className="text-xs font-bold text-text-muted uppercase tracking-wider flex items-center gap-2">
               <History size={15} />
               {m('approvalRequests')}
+              {stats.pendingCount > 0 && (
+                <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+                  {stats.pendingCount}
+                </span>
+              )}
             </div>
             <button
               onClick={() => navigate('/manager-calendar')}
@@ -282,7 +300,6 @@ const ManagerDashboard = () => {
           <div className="p-5 flex-1">
             <ApprovalList requests={requests} onApprove={handleApprove} onReject={handleReject} />
 
-            {/* Accumulation alerts */}
             {stats.accumAlerts.length > 0 && (
               <div className="mt-4 space-y-2">
                 {stats.accumAlerts.map((p) => (
@@ -298,7 +315,7 @@ const ManagerDashboard = () => {
           </div>
         </motion.div>
 
-        {/* Who's off + Stats */}
+        {/* Who's Off + Stats */}
         <div className="space-y-5">
           {/* Who's off today */}
           <motion.div variants={itemVariants} className="bg-white rounded-radius border border-border shadow-sm p-5">
@@ -307,7 +324,7 @@ const ManagerDashboard = () => {
                 <Calendar size={15} />
                 {m('whoIsOff')}
               </div>
-              <span className="text-xs text-text-muted">
+              <span className="text-xs text-text-muted font-medium">
                 {format(new Date(), 'd MMM yyyy', { locale: dateLocale })}
               </span>
             </div>
@@ -315,13 +332,19 @@ const ManagerDashboard = () => {
               {offTodayList.length > 0 ? (
                 offTodayList.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-3 p-3 bg-bg rounded-radius-sm hover:bg-bg/80 transition-colors">
-                    <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center text-xs font-bold text-white flex-shrink-0 shadow-sm">
                       {item.avatar}
                     </div>
-                    <div className="flex-1">
-                      <div className="text-sm font-semibold text-text leading-tight">{item.name}</div>
-                      <div className="text-xs text-text-muted">{m('onLeave')}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-text leading-tight truncate">{item.name}</div>
+                      {item.department && item.department !== '—' && (
+                        <div className="text-[10px] text-text-muted mt-0.5">{item.department}</div>
+                      )}
                     </div>
+                    <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-full border border-emerald-100">
+                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                      {m('onLeave')}
+                    </span>
                   </div>
                 ))
               ) : (
@@ -335,15 +358,15 @@ const ManagerDashboard = () => {
           {/* Team stats */}
           <motion.div variants={itemVariants} className="bg-white rounded-radius border border-border shadow-sm p-5">
             <div className="text-xs font-bold text-text-muted uppercase tracking-wider mb-4 flex items-center gap-2">
-              <BarChart2 size={15} />
+              <TrendingUp size={15} />
               {m('avgTeamBalance')}
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 bg-bg rounded-radius-sm text-center">
+              <div className="p-4 bg-primary/5 rounded-radius-sm text-center border border-primary/10">
                 <div className="text-2xl font-bold text-primary">{loading ? '…' : stats.avgBalance}</div>
                 <div className="text-xs text-text-muted mt-1">{m('avgAvailableDays')}</div>
               </div>
-              <div className="p-4 bg-bg rounded-radius-sm text-center">
+              <div className="p-4 bg-emerald-50 rounded-radius-sm text-center border border-emerald-100">
                 <div className="text-2xl font-bold text-emerald-600">{loading ? '…' : `${stats.approvalRate}%`}</div>
                 <div className="text-xs text-text-muted mt-1">{m('approvalRate')}</div>
               </div>
@@ -359,11 +382,15 @@ const ManagerDashboard = () => {
             <Calendar size={15} />
             {m('globalLeaveMap')}
           </div>
-          <select className="bg-bg border border-border rounded-radius-sm px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-light/30 cursor-pointer">
-            <option>{m('allDepts')}</option>
-            <option>TI</option>
-            <option>Comercial</option>
-            <option>Financeiro</option>
+          <select
+            value={deptFilter}
+            onChange={e => setDeptFilter(e.target.value)}
+            className="bg-bg border border-border rounded-radius-sm px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary-light/30 cursor-pointer"
+          >
+            <option value="">{m('allDepts')}</option>
+            {availableDepts.map(dept => (
+              <option key={dept} value={dept}>{dept}</option>
+            ))}
           </select>
         </div>
         <div className="p-5">
@@ -373,7 +400,7 @@ const ManagerDashboard = () => {
               A carregar mapa…
             </div>
           ) : (
-            <GanttChart data={ganttData} />
+            <GanttChart data={filteredGanttData} />
           )}
         </div>
       </motion.div>
@@ -386,26 +413,33 @@ const ManagerDashboard = () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <ReportCard
-            icon={<BarChart2 className="w-6 h-6 text-primary-light" />}
+            icon={<BarChart2 className="w-6 h-6" />}
+            iconColor="text-primary-light bg-blue-50"
             title="Mapa de Férias Anual"
-            desc="Gera e exporta o mapa anual obrigatório (Código Laboral CV)."
-            btnText="Exportar PDF"
-            onAction={() => showToast('Exportação PDF em breve disponível.')}
+            desc={`${approvedReqs.length} pedidos aprovados — ficheiro CSV pronto para afixação e envio à DGT.`}
+            btnText="Exportar CSV"
+            onAction={exportMapaAnual}
+            disabled={loading || approvedReqs.length === 0}
           />
           <ReportCard
-            icon={<ClipboardList className="w-6 h-6 text-primary-light" />}
+            icon={<ClipboardList className="w-6 h-6" />}
+            iconColor="text-violet-600 bg-violet-50"
             title="Relatório DGT"
-            desc="Dados formatados para a Direção Geral do Trabalho."
+            desc={`${approvedReqs.filter(r => r.start_date >= '2026-01-01' && r.start_date <= '2026-04-30').length} pedidos Jan–Abr 2026 para a Direção Geral do Trabalho.`}
             btnText="Exportar DGT"
-            onAction={() => showToast('Exportação DGT em breve disponível.')}
+            onAction={exportDGT}
+            disabled={loading}
           />
           <ReportCard
-            icon={<AlertTriangle className="w-6 h-6 text-accent" />}
+            icon={<AlertTriangle className="w-6 h-6" />}
+            iconColor="text-amber-600 bg-amber-50"
             title="Alertas de Acumulação"
-            desc={`${stats.accumAlerts.length} colaborador(es) próximo(s) do limite legal de 44 dias.`}
-            btnText={`Ver ${stats.accumAlerts.length} Alerta(s)`}
+            desc={stats.accumAlerts.length === 0
+              ? 'Nenhum colaborador em risco de acumulação.'
+              : `${stats.accumAlerts.length} colaborador(es) próximo(s) do limite legal de 44 dias.`}
+            btnText="Ver Relatórios"
             btnColor="accent"
-            onAction={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            onAction={() => navigate('/compliance')}
           />
         </div>
       </motion.div>
@@ -413,14 +447,17 @@ const ManagerDashboard = () => {
   );
 };
 
-const ReportCard = ({ icon, title, desc, btnText, btnColor = 'primary', onAction }) => (
-  <div className="bg-white border border-border rounded-radius p-5 hover:shadow-md transition-all group">
-    <div className="mb-3">{icon}</div>
-    <h4 className="text-sm font-bold text-text mb-1 group-hover:text-primary-light transition-colors">{title}</h4>
-    <p className="text-xs text-text-muted leading-relaxed mb-5">{desc}</p>
+const ReportCard = ({ icon, iconColor = 'text-primary-light bg-blue-50', title, desc, btnText, btnColor = 'primary', onAction, disabled }) => (
+  <div className="bg-white border border-border rounded-radius p-5 hover:shadow-md transition-all group flex flex-col">
+    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 flex-shrink-0 ${iconColor}`}>
+      {icon}
+    </div>
+    <h4 className="text-sm font-bold text-text mb-1.5 group-hover:text-primary-light transition-colors">{title}</h4>
+    <p className="text-xs text-text-muted leading-relaxed mb-5 flex-1">{desc}</p>
     <button
       onClick={onAction}
-      className={`w-full py-2.5 rounded-radius-sm text-xs font-bold text-white transition-all cursor-pointer active:scale-95
+      disabled={disabled}
+      className={`w-full py-2.5 rounded-radius-sm text-xs font-bold text-white transition-all cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed
         ${btnColor === 'accent' ? 'bg-accent hover:bg-accent-hover' : 'bg-primary hover:bg-primary-light'}`}
     >
       {btnText}

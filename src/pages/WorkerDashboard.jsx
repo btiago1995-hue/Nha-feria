@@ -37,6 +37,13 @@ const expandAbsences = (leaveRequests) => {
   return absences;
 };
 
+const getGreeting = () => {
+  const h = new Date().getHours();
+  if (h < 12) return 'Bom dia';
+  if (h < 18) return 'Boa tarde';
+  return 'Boa noite';
+};
+
 const WorkerDashboard = () => {
   const { profile } = useOutletContext();
   const navigate = useNavigate();
@@ -96,6 +103,7 @@ const WorkerDashboard = () => {
 
       setTeamAbsences(expandAbsences(teamReqs || []));
 
+
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
     } finally {
@@ -111,6 +119,8 @@ const WorkerDashboard = () => {
     used:    sumDays(requests.filter(r => r.status === 'approved')),
     pending: sumDays(requests.filter(r => r.status === 'pending')),
   };
+
+  const firstName = profile?.full_name?.split(' ')[0] || '';
 
   const getStatusBadge = (status) => {
     const label = t('status', status);
@@ -149,7 +159,8 @@ const WorkerDashboard = () => {
       className="space-y-7 max-w-[1200px] mx-auto"
     >
       {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col gap-1">
+      <motion.div variants={itemVariants} className="flex flex-col gap-0.5">
+        <p className="text-xs font-semibold text-primary-light uppercase tracking-widest">{getGreeting()}{firstName ? `, ${firstName}` : ''} 👋</p>
         <h2 className="text-2xl font-bold text-text text-gradient">{d('title')}</h2>
         <p className="text-sm text-text-muted">{d('subtitle')}</p>
       </motion.div>
@@ -172,7 +183,8 @@ const WorkerDashboard = () => {
             whileHover={{ scale: 1.01 }}
             className="bg-primary border border-primary-light/20 rounded-radius p-6 shadow-lg relative overflow-hidden group cursor-pointer"
           >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-12 -mt-12 blur-2xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -mr-16 -mt-16 blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-accent/10 rounded-full -ml-8 -mb-8 pointer-events-none" />
             <div className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-3 flex items-center gap-2">
               <Plane className="w-3.5 h-3.5" />
               {d('quickAction')}
@@ -190,20 +202,19 @@ const WorkerDashboard = () => {
           {/* Next Holiday */}
           {nextHoliday ? (
             <div className="bg-white border border-border rounded-radius p-4 flex items-center gap-4 hover:shadow-sm transition-shadow">
-              <div className="text-center px-2 flex-shrink-0">
-                <div className="text-2xl font-bold text-primary leading-none">
+              <div className="w-12 h-14 bg-violet-50 rounded-radius-sm flex flex-col items-center justify-center flex-shrink-0 border border-violet-100">
+                <div className="text-2xl font-bold text-violet-700 leading-none">
                   {format(parseISO(nextHoliday.date), 'd')}
                 </div>
-                <div className="text-xs text-text-muted font-bold uppercase mt-1">
+                <div className="text-[10px] text-violet-500 font-bold uppercase mt-0.5">
                   {format(parseISO(nextHoliday.date), 'MMM', { locale: dateLocale })}
                 </div>
               </div>
-              <div className="border-l border-border h-10 mx-1" />
               <div>
-                <div className="text-sm font-bold text-text">{nextHoliday.name}</div>
-                <div className="text-xs text-text-muted capitalize">
+                <div className="text-xs font-bold text-violet-600 uppercase tracking-wider mb-0.5">
                   {nextHoliday.scope === 'national' ? d('nextHoliday') : `${d('islandHoliday')} — ${nextHoliday.island}`}
                 </div>
+                <div className="text-sm font-bold text-text">{nextHoliday.name}</div>
               </div>
             </div>
           ) : (
@@ -217,7 +228,17 @@ const WorkerDashboard = () => {
       {/* Team Calendar + History */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 pb-10">
         <motion.div variants={itemVariants}>
-          <TeamCalendar teamAbsences={teamAbsences} holidays={holidays} />
+          <TeamCalendar
+            teamAbsences={teamAbsences}
+            holidays={holidays}
+            myLeaves={requests
+              .filter(r => r.status === 'approved')
+              .flatMap(r => {
+                const s = parseISO(r.start_date);
+                const e = parseISO(r.end_date);
+                return eachDayOfInterval({ start: s, end: e }).map(d => format(d, 'yyyy-MM-dd'));
+              })}
+          />
         </motion.div>
 
         <motion.div variants={itemVariants} className="bg-white rounded-radius border border-border shadow-sm flex flex-col">
