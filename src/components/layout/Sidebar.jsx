@@ -188,23 +188,6 @@ const Sidebar = ({ profile, isOpen, onClose }) => {
         </button>
       </nav>
 
-      {/* User profile footer */}
-      <div className="p-4 border-t border-white/10 bg-black/10">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent/50 to-primary-light/50 border-2 border-white/10 flex items-center justify-center text-white text-xs font-bold shadow-lg overflow-hidden flex-shrink-0">
-            {(() => {
-              const emoji = profile?.id ? localStorage.getItem(`nha_feria_avatar_${profile.id}`) : null;
-              return emoji
-                ? <span className="text-xl leading-none">{emoji}</span>
-                : (profile?.full_name?.charAt(0) || 'U');
-            })()}
-          </div>
-          <div className="overflow-hidden min-w-0">
-            <div className="text-xs font-bold text-white truncate">{profile?.full_name || 'Usuário'}</div>
-            <div className="text-[10px] text-white/40 truncate capitalize">{profile?.role || 'Colaborador'}</div>
-          </div>
-        </div>
-      </div>
     </aside>
   );
 };
