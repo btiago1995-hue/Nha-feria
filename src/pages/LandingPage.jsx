@@ -847,8 +847,8 @@ const LandingPage = () => {
                 { label: 'Como Funciona',   href: '#como-funciona'   },
                 { label: 'Preços',          href: '#precos'           },
                 { label: 'FAQ',             href: '#faq'              },
-                { label: 'Privacidade',     href: '#'                 },
-                { label: 'Termos',          href: '#'                 },
+                { label: 'Privacidade',     href: '/privacy'          },
+                { label: 'Termos',          href: '/terms'            },
               ].map(l => (
                 <a key={l.label} href={l.href} className="hover:text-white/70 transition-colors py-0.5">
                   {l.label}

@@ -12,6 +12,8 @@ import Compliance from './pages/Compliance';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import MainLayout from './components/layout/MainLayout';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfUse from './pages/TermsOfUse';
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/invite/:token" element={<InvitePage />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfUse />} />
 
         {/* Protected Routes */}
         <Route element={<MainLayout />}>
