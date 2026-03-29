@@ -297,8 +297,7 @@ const TopBar = ({ title, user, profile, onMenuClick }) => {
           title="Ver perfil"
         >
           {(() => {
-            const emoji = profile?.id ? localStorage.getItem(`nha_feria_avatar_${profile.id}`) : null;
-            if (emoji) return <span className="text-lg leading-none">{emoji}</span>;
+            if (profile?.avatar_emoji) return <span className="text-lg leading-none">{profile.avatar_emoji}</span>;
             if (user?.user_metadata?.avatar_url) return <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />;
             return <span>{profile?.full_name?.charAt(0)?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}</span>;
           })()}

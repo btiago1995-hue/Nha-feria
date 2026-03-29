@@ -53,23 +53,19 @@ const ProfilePage = () => {
     }
   };
 
-  const avatarKey = profile?.id ? `nha_feria_avatar_${profile.id}` : null;
-  const [selectedEmoji, setSelectedEmoji] = useState(
-    () => (avatarKey ? localStorage.getItem(avatarKey) : null) || null
-  );
-  const [pickerOpen, setPickerOpen] = useState(() => !localStorage.getItem(avatarKey));
+  const [selectedEmoji, setSelectedEmoji] = useState(() => profile?.avatar_emoji || null);
+  const [pickerOpen, setPickerOpen] = useState(() => !profile?.avatar_emoji);
 
-  const handleSelectEmoji = (emoji) => {
+  const handleSelectEmoji = async (emoji) => {
     setSelectedEmoji(emoji);
-    if (avatarKey) localStorage.setItem(avatarKey, emoji);
-    // Auto-close picker after a short delay so user sees the selection
     setTimeout(() => setPickerOpen(false), 350);
+    await supabase.from('profiles').update({ avatar_emoji: emoji }).eq('id', profile.id);
   };
 
-  const handleRemoveEmoji = () => {
+  const handleRemoveEmoji = async () => {
     setSelectedEmoji(null);
-    if (avatarKey) localStorage.removeItem(avatarKey);
     setPickerOpen(true);
+    await supabase.from('profiles').update({ avatar_emoji: null }).eq('id', profile.id);
   };
 
   const roleName = (role) => {
