@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://nhaferia.cv/sitemap.xml

@@ -4,10 +4,13 @@ import { translations } from './translations';
 const LanguageContext = createContext(null);
 
 export const LanguageProvider = ({ children }) => {
-  const [lang, setLang] = useState(() => localStorage.getItem('nha-feria-lang') || 'pt');
+  const [lang, setLang] = useState(() => {
+    if (typeof localStorage === 'undefined') return 'pt';
+    return localStorage.getItem('nha-feria-lang') || 'pt';
+  });
 
   const switchLang = (l) => {
-    localStorage.setItem('nha-feria-lang', l);
+    if (typeof localStorage !== 'undefined') localStorage.setItem('nha-feria-lang', l);
     setLang(l);
   };
 

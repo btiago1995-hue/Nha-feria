@@ -1,0 +1,25 @@
+# Nha Féria
+
+> Plataforma SaaS de gestão de férias e licenças para empresas em Cabo Verde.
+
+Nha Féria substitui email e Excel na gestão de férias. Os colaboradores submetem pedidos online; os gestores aprovam com um clique; toda a equipa vê o calendário em tempo real.
+
+## O que faz
+
+- Gestão de pedidos de férias e licenças com fluxo de aprovação
+- Calendário de equipa em tempo real para evitar conflitos
+- Cumprimento automático do Código Laboral de Cabo Verde (22 dias úteis/ano)
+- Notificações por email para pedidos e decisões
+- Convite de colaboradores por link
+- Exportação de mapas anuais em CSV
+- Plano gratuito até 5 colaboradores
+
+## Contexto legal
+
+A plataforma respeita o Código Laboral de Cabo Verde (Lei n.º 41/VIII/2013), incluindo o direito a 22 dias úteis de férias por ano e as regras de acumulação.
+
+## Empresa
+
+- Website: https://nhaferia.cv
+- Suporte: suporte@nhaferia.cv
+- País: Cabo Verde
