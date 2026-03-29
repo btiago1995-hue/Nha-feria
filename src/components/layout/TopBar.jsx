@@ -188,7 +188,7 @@ const TopBar = ({ title, user, profile, onMenuClick }) => {
   };
 
   return (
-    <header className="h-16 bg-white border-b border-border px-7 flex items-center justify-between sticky top-0 z-40 shadow-sm">
+    <header className="bg-white border-b border-border px-7 flex items-center justify-between sticky top-0 z-40 shadow-sm" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 0.75rem)', paddingBottom: '0.75rem', minHeight: '4rem' }}>
       <div className="flex items-center gap-3">
         <button onClick={onMenuClick} className="md:hidden text-text hover:text-primary transition-colors">
           <Menu size={20} />

@@ -63,7 +63,7 @@ const Sidebar = ({ profile, isOpen, onClose }) => {
   return (
     <aside className={`w-[240px] bg-primary h-screen flex flex-col fixed left-0 top-0 z-50 transition-transform md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       {/* Logo */}
-      <div className="flex items-center gap-3 px-5 py-6 border-b border-white/10">
+      <div className="flex items-center gap-3 px-5 border-b border-white/10" style={{ paddingTop: 'calc(env(safe-area-inset-top) + 1.25rem)', paddingBottom: '1.25rem' }}>
         <div className="w-9 h-9 bg-accent rounded-lg flex items-center justify-center text-primary text-xl shadow-lg shadow-accent/20">
           🌴
         </div>

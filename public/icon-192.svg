@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
   <rect width="192" height="192" rx="42" fill="#1A3A5C"/>
-  <rect x="76" y="76" width="40" height="40" rx="10" fill="#F59E0B"/>
-  <text x="96" y="108" font-size="28" text-anchor="middle" font-family="Arial">🌴</text>
+  <rect x="8" y="8" width="176" height="176" rx="36" fill="#F59E0B"/>
+  <text x="96" y="132" font-size="100" text-anchor="middle" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, Arial">🌴</text>
 </svg>
