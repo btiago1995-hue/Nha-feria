@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { X, CheckCircle2, MessageSquare, Mail, Copy, Check } from 'lucide-react';
 import { useCompany } from '../../lib/CompanyContext';
 import { supabase } from '../../lib/supabase';
 import { sendEmail } from '../../utils/sendEmail';
 
 const InviteModal = ({ isOpen, onClose, onAdd }) => {
-  const { departments } = useCompany() || {};
+  const { departments, company } = useCompany() || {};
   const deptList = departments || ['Tecnologia'];
 
+  const submittingRef = useRef(false);
   const [step, setStep]         = useState('form'); // 'form' | 'loading' | 'success'
   const [inviteUrl, setInviteUrl] = useState('');
   const [copied, setCopied]     = useState(false);
@@ -25,6 +26,8 @@ const InviteModal = ({ isOpen, onClose, onAdd }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setError('');
     setStep('loading');
 
@@ -61,11 +64,6 @@ const InviteModal = ({ isOpen, onClose, onAdd }) => {
 
       // Auto-send invite email if address was provided
       if (formData.email) {
-        const { data: company } = await supabase
-          .from('companies')
-          .select('name')
-          .eq('id', inviterProfile?.company_id)
-          .single();
         sendEmail({
           type: 'invite',
           toEmail: formData.email,
@@ -83,6 +81,8 @@ const InviteModal = ({ isOpen, onClose, onAdd }) => {
       console.error('Invite creation failed:', err);
       setError('Erro ao criar convite. Tenta novamente.');
       setStep('form');
+    } finally {
+      submittingRef.current = false;
     }
   };
 
