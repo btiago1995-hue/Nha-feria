@@ -98,10 +98,13 @@ const InviteModal = ({ isOpen, onClose, onAdd }) => {
 
   const handleShare = (method) => {
     const message = `Olá ${formData.name}! 👋 O teu gestor convidou-te para a Nha Féria. Acede aqui para criar a tua conta: ${inviteUrl}`;
+    const subject = 'Convite Nha Féria';
     if (method === 'whatsapp') {
       window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-    } else {
-      window.location.href = `mailto:?subject=Convite%20Nha%20F%C3%A9ria&body=${encodeURIComponent(message)}`;
+    } else if (method === 'gmail') {
+      window.open(`https://mail.google.com/mail/?view=cm&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`, '_blank');
+    } else if (method === 'outlook') {
+      window.open(`https://outlook.live.com/mail/0/deeplink/compose?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`, '_blank');
     }
     handleClose();
   };
@@ -266,12 +269,20 @@ const InviteModal = ({ isOpen, onClose, onAdd }) => {
                 >
                   <MessageSquare size={18} /> Enviar via WhatsApp
                 </button>
-                <button
-                  onClick={() => handleShare('email')}
-                  className="w-full flex items-center justify-center gap-2 py-3 border border-border text-text text-sm font-bold rounded-lg hover:bg-bg transition-all active:scale-[0.98]"
-                >
-                  <Mail size={18} /> Enviar via Email
-                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handleShare('gmail')}
+                    className="flex items-center justify-center gap-2 py-3 border border-border text-text text-sm font-bold rounded-lg hover:bg-bg transition-all active:scale-[0.98]"
+                  >
+                    <Mail size={16} /> Gmail
+                  </button>
+                  <button
+                    onClick={() => handleShare('outlook')}
+                    className="flex items-center justify-center gap-2 py-3 border border-border text-text text-sm font-bold rounded-lg hover:bg-bg transition-all active:scale-[0.98]"
+                  >
+                    <Mail size={16} /> Outlook
+                  </button>
+                </div>
               </div>
 
               <button
