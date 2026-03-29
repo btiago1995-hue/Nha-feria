@@ -11,6 +11,8 @@ import ManagerCalendar from './pages/ManagerCalendar';
 import Compliance from './pages/Compliance';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
+import UpgradePage from './pages/UpgradePage';
+import PaymentResult from './pages/PaymentResult';
 import MainLayout from './components/layout/MainLayout';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfUse from './pages/TermsOfUse';
@@ -24,6 +26,7 @@ function App() {
         <Route path="/invite/:token" element={<InvitePage />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfUse />} />
+        <Route path="/payment/result" element={<PaymentResult />} />
 
         {/* Protected Routes */}
         <Route element={<MainLayout />}>
@@ -35,6 +38,7 @@ function App() {
           <Route path="/compliance" element={<Compliance />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/upgrade" element={<UpgradePage />} />
 
           {/* Default redirect */}
           <Route path="/dashboard" element={<Navigate to="/worker-dashboard" replace />} />

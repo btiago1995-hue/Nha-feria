@@ -13,6 +13,7 @@ import {
   X,
   Briefcase,
   UserCircle2,
+  Zap,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useLanguage } from '../../lib/LanguageContext';
@@ -58,6 +59,7 @@ const Sidebar = ({ profile, isOpen, onClose }) => {
   const bottomItems = [
     { name: n('profile'),  icon: <User size={18} />,     path: '/profile'  },
     { name: n('settings'), icon: <Settings size={18} />, path: '/settings' },
+    ...(role === 'admin' ? [{ name: 'Subscrição', icon: <Zap size={18} />, path: '/upgrade' }] : []),
   ];
 
   return (
