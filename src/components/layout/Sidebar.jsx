@@ -107,6 +107,7 @@ const Sidebar = ({ profile, isOpen, onClose }) => {
               <NavLink
                 key={item.path}
                 to={item.path}
+                onClick={onClose}
                 className={({ isActive }) => `
                   relative flex items-center gap-3 px-5 py-3 text-sm font-medium transition-all group
                   ${isActive ? 'text-accent' : 'text-white/60 hover:text-white'}
@@ -157,6 +158,7 @@ const Sidebar = ({ profile, isOpen, onClose }) => {
           <NavLink
             key={item.path}
             to={item.path}
+            onClick={onClose}
             className={({ isActive }) => `
               relative flex items-center gap-3 px-5 py-3 text-sm font-medium transition-all group
               ${isActive ? 'text-accent' : 'text-white/60 hover:text-white'}

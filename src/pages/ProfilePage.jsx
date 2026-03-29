@@ -30,9 +30,10 @@ const ProfilePage = () => {
   const { t, lang } = useLanguage();
   const p = (key) => t('profile', key);
 
-  const [island, setIsland]         = useState(profile?.island || '');
-  const [islandSaving, setIslandSaving] = useState(false);
-  const [islandSaved, setIslandSaved]   = useState(false);
+  const [island, setIsland]             = useState(profile?.island || '');
+  const [islandSaving, setIslandSaving]   = useState(false);
+  const [islandSaved, setIslandSaved]     = useState(false);
+  const [islandOpen, setIslandOpen]       = useState(() => !profile?.island);
 
   const handleSaveIsland = async (val) => {
     setIsland(val);
@@ -41,7 +42,10 @@ const ProfilePage = () => {
     try {
       await supabase.from('profiles').update({ island: val }).eq('id', profile.id);
       setIslandSaved(true);
-      setTimeout(() => setIslandSaved(false), 2500);
+      setTimeout(() => {
+        setIslandSaved(false);
+        setIslandOpen(false);
+      }, 800);
     } catch (err) {
       console.error('Island save error:', err);
     } finally {
@@ -179,38 +183,61 @@ const ProfilePage = () => {
 
       {/* Island selector */}
       <div className="bg-white rounded-radius border border-border shadow-sm overflow-hidden mb-5">
-        <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+        <button
+          onClick={() => setIslandOpen(o => !o)}
+          className="w-full px-6 py-4 flex items-center justify-between cursor-pointer hover:bg-bg/50 transition-colors"
+        >
           <div className="flex items-center gap-2">
             <MapPin size={15} className="text-text-muted" />
             <span className="text-xs font-bold text-text-muted uppercase tracking-wider">Ilha de Residência</span>
           </div>
-          {islandSaving && <Loader2 size={13} className="animate-spin text-text-muted" />}
-          {islandSaved && (
-            <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
-              <Check size={12} /> Guardado
-            </span>
-          )}
-        </div>
-        <div className="p-4">
-          <p className="text-xs text-text-muted mb-3">Usada para mostrar os feriados locais da tua ilha.</p>
-          <div className="grid grid-cols-3 gap-2">
-            {CV_ISLANDS.map(isl => (
-              <button
-                key={isl}
-                type="button"
-                onClick={() => handleSaveIsland(isl)}
-                className={`px-3 py-2 rounded-xl text-xs font-semibold border-2 transition-all text-left ${
-                  island === isl
-                    ? 'border-primary bg-primary/5 text-primary'
-                    : 'border-border hover:border-primary/30 text-text-muted'
-                }`}
-              >
-                {isl}
-                {island === isl && <Check size={11} className="inline ml-1" />}
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            {islandSaving && <Loader2 size={13} className="animate-spin text-text-muted" />}
+            {islandSaved && (
+              <span className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
+                <Check size={12} /> Guardado
+              </span>
+            )}
+            {island && !islandSaving && !islandSaved && (
+              <span className="text-xs font-semibold text-primary">{island}</span>
+            )}
+            <Pencil size={13} className="text-text-muted" />
           </div>
-        </div>
+        </button>
+
+        <AnimatePresence initial={false}>
+          {islandOpen && (
+            <motion.div
+              key="island-picker"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <div className="px-4 pb-4 pt-1 border-t border-border">
+                <p className="text-xs text-text-muted mb-3 pt-2">Usada para mostrar os feriados locais da tua ilha.</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {CV_ISLANDS.map(isl => (
+                    <button
+                      key={isl}
+                      type="button"
+                      onClick={() => handleSaveIsland(isl)}
+                      className={`px-3 py-2 rounded-xl text-xs font-semibold border-2 transition-all text-left ${
+                        island === isl
+                          ? 'border-primary bg-primary/5 text-primary'
+                          : 'border-border hover:border-primary/30 text-text-muted'
+                      }`}
+                    >
+                      {isl}
+                      {island === isl && <Check size={11} className="inline ml-1" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Fields */}
