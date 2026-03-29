@@ -6,6 +6,7 @@ import { supabase } from '../../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CompanyProvider, useCompany } from '../../lib/CompanyContext';
 import CompanySetupModal from '../ui/CompanySetupModal';
+import BottomNav from './BottomNav';
 
 const MainLayout = () => {
   const [session, setSession] = useState(null);
@@ -129,7 +130,7 @@ const AppShell = ({ profile, session, sidebarOpen, setSidebarOpen, getTitle, loc
       <Sidebar profile={profile} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 md:ml-[240px] flex flex-col">
         <TopBar title={getTitle()} user={session.user} profile={profile} onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 p-6 md:p-8">
+        <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -143,6 +144,7 @@ const AppShell = ({ profile, session, sidebarOpen, setSidebarOpen, getTitle, loc
           </AnimatePresence>
         </main>
       </div>
+      <BottomNav profile={profile} />
     </div>
   );
 };
