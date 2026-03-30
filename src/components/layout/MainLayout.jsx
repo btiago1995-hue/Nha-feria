@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import { supabase } from '../../lib/supabase';
@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CompanyProvider, useCompany } from '../../lib/CompanyContext';
 import CompanySetupModal from '../ui/CompanySetupModal';
 import BottomNav from './BottomNav';
+import { AlertTriangle } from 'lucide-react';
 
 const MainLayout = () => {
   const [session, setSession] = useState(null);
@@ -113,8 +114,10 @@ const MainLayout = () => {
 
 // Inner component so it can access CompanyContext
 const AppShell = ({ profile, session, sidebarOpen, setSidebarOpen, getTitle, location }) => {
-  const { company, refetch } = useCompany();
+  const { company, isSubscriptionActive, refetch } = useCompany();
+  const navigate = useNavigate();
   const needsSetup = profile?.role === 'admin' && company !== null && !company?.sector;
+  const showSubBanner = profile?.role === 'admin' && !isSubscriptionActive && company?.plan !== 'starter';
 
   return (
     <div className="min-h-screen bg-bg flex">
@@ -130,6 +133,20 @@ const AppShell = ({ profile, session, sidebarOpen, setSidebarOpen, getTitle, loc
       <Sidebar profile={profile} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 md:ml-[240px] flex flex-col">
         <TopBar title={getTitle()} user={session.user} profile={profile} onMenuClick={() => setSidebarOpen(true)} />
+        {showSubBanner && (
+          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2.5 flex items-center gap-3">
+            <AlertTriangle size={15} className="text-amber-600 flex-shrink-0" />
+            <p className="text-xs text-amber-800 font-semibold flex-1">
+              A subscrição expirou. Algumas funcionalidades podem estar limitadas.
+            </p>
+            <button
+              onClick={() => navigate('/upgrade')}
+              className="text-xs font-bold text-amber-800 border border-amber-300 rounded-lg px-3 py-1 hover:bg-amber-100 transition-colors flex-shrink-0"
+            >
+              Renovar plano →
+            </button>
+          </div>
+        )}
         <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8">
           <AnimatePresence mode="wait">
             <motion.div

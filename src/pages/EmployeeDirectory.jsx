@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Search, Pencil, History as HistoryIcon, Filter, X, ChevronDown, Check, CalendarDays, Clock } from 'lucide-react';
+import { UserPlus, Search, Pencil, History as HistoryIcon, Filter, X, ChevronDown, Check, CalendarDays, Clock, Trash2, AlertTriangle } from 'lucide-react';
 import ProgressBar from '../components/ui/ProgressBar';
 import InviteModal from '../components/ui/InviteModal';
 import { supabase } from '../lib/supabase';
@@ -29,14 +29,17 @@ const itemVariants = {
 
 // ─── Edit Modal ──────────────────────────────────────────────────────────────
 const EditEmployeeModal = ({ worker, departments, onClose, onSaved }) => {
-  const [form, setForm]     = useState({
+  const [form, setForm]         = useState({
     full_name:        worker.name,
     department:       worker.department,
     role:             worker.role,
     vacation_balance: worker.balance,
   });
-  const [saving, setSaving] = useState(false);
-  const [error,  setError]  = useState('');
+  const [saving,    setSaving]   = useState(false);
+  const [deleting,  setDeleting] = useState(false);
+  const [confirmDel, setConfirmDel] = useState('');
+  const [showDel,   setShowDel]  = useState(false);
+  const [error,     setError]    = useState('');
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -55,6 +58,16 @@ const EditEmployeeModal = ({ worker, departments, onClose, onSaved }) => {
 
     setSaving(false);
     if (err) { setError('Erro ao guardar. Verifica as tuas permissões.'); return; }
+    onSaved();
+    onClose();
+  };
+
+  const handleDelete = async () => {
+    if (confirmDel !== worker.name) return;
+    setDeleting(true);
+    const { error: err } = await supabase.rpc('gdpr_delete_user', { p_target_user_id: worker.id });
+    setDeleting(false);
+    if (err) { setError('Erro ao apagar: ' + err.message); setShowDel(false); return; }
     onSaved();
     onClose();
   };
@@ -130,6 +143,46 @@ const EditEmployeeModal = ({ worker, departments, onClose, onSaved }) => {
             </button>
           </div>
         </form>
+
+        {/* RGPD — Delete section */}
+        <div className="px-6 pb-5">
+          {!showDel ? (
+            <button
+              onClick={() => setShowDel(true)}
+              className="flex items-center gap-1.5 text-xs text-danger/70 hover:text-danger transition-colors mt-1"
+            >
+              <Trash2 size={13} /> Apagar colaborador (RGPD)
+            </button>
+          ) : (
+            <div className="bg-red-50 border border-red-200 rounded-radius-sm p-4 space-y-3">
+              <div className="flex items-start gap-2">
+                <AlertTriangle size={15} className="text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-red-800 leading-relaxed">
+                  <strong>Ação irreversível.</strong> Apaga todos os dados pessoais e pedidos de férias de <strong>{worker.name}</strong>. Para confirmar, escreve o nome completo abaixo.
+                </p>
+              </div>
+              <input
+                type="text"
+                placeholder={worker.name}
+                className="w-full px-3 py-2 border border-red-300 rounded-radius-sm text-sm focus:outline-none focus:ring-2 focus:ring-red-300"
+                value={confirmDel}
+                onChange={e => setConfirmDel(e.target.value)}
+              />
+              <div className="flex gap-2">
+                <button onClick={() => { setShowDel(false); setConfirmDel(''); }} className="flex-1 py-2 text-xs font-semibold border border-border rounded-radius-sm hover:bg-bg transition-colors">
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={confirmDel !== worker.name || deleting}
+                  className="flex-1 py-2 text-xs font-bold bg-danger text-white rounded-radius-sm hover:bg-red-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {deleting ? 'A apagar…' : 'Apagar definitivamente'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </motion.div>
     </div>
   );
@@ -248,7 +301,7 @@ const EmployeeDirectory = () => {
     try {
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, full_name, role, department, vacation_balance, created_at, nif, cni, job_title, hire_date')
         .eq('company_id', company?.id || '')
         .order('full_name', { ascending: true });
 
@@ -279,6 +332,10 @@ const EmployeeDirectory = () => {
         balance:      p.vacation_balance || 22,
         used:         usedDaysMap[p.id] || 0,
         tenureMonths: tenureMap[p.id] || 0,
+        nif:          p.nif || null,
+        cni:          p.cni || null,
+        job_title:    p.job_title || null,
+        hire_date:    p.hire_date || null,
       })));
     } catch (err) {
       console.error('Error fetching team data:', err);
@@ -402,22 +459,24 @@ const EmployeeDirectory = () => {
               <tr className="bg-bg/50 border-b border-border">
                 <th className="px-6 py-4 text-[11px] font-bold text-text-muted uppercase tracking-wider">Colaborador</th>
                 <th className="px-6 py-4 text-[11px] font-bold text-text-muted uppercase tracking-wider">Departamento</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-text-muted uppercase tracking-wider">Antiguidade</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-text-muted uppercase tracking-wider w-[240px]">Saldo de Férias</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-text-muted uppercase tracking-wider hidden lg:table-cell">NIF</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-text-muted uppercase tracking-wider hidden xl:table-cell">CNI</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-text-muted uppercase tracking-wider hidden md:table-cell">Antiguidade</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-text-muted uppercase tracking-wider w-[200px]">Saldo de Férias</th>
                 <th className="px-6 py-4 text-[11px] font-bold text-text-muted uppercase tracking-wider text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center">
+                  <td colSpan={7} className="px-6 py-12 text-center">
                     <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-2" />
                     <p className="text-xs text-text-muted">A carregar equipa…</p>
                   </td>
                 </tr>
               ) : filteredTeam.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-sm text-text-muted">
+                  <td colSpan={7} className="px-6 py-12 text-center text-sm text-text-muted">
                     Nenhum colaborador encontrado.
                   </td>
                 </tr>
@@ -444,7 +503,13 @@ const EmployeeDirectory = () => {
                         {worker.department}
                       </span>
                     </td>
-                    <td className="px-6 py-5 text-sm text-text-muted font-medium">
+                    <td className="px-6 py-5 text-xs font-mono text-text-muted hidden lg:table-cell">
+                      {worker.nif || <span className="text-amber-500 text-[10px] font-sans font-semibold">Em falta</span>}
+                    </td>
+                    <td className="px-6 py-5 text-xs font-mono text-text-muted hidden xl:table-cell">
+                      {worker.cni || <span className="text-amber-500 text-[10px] font-sans font-semibold">Em falta</span>}
+                    </td>
+                    <td className="px-6 py-5 text-sm text-text-muted font-medium hidden md:table-cell">
                       {worker.tenureMonths} meses
                     </td>
                     <td className="px-6 py-5">

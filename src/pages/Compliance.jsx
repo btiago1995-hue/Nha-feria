@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   FileText, Download, ShieldCheck, AlertTriangle, CheckCircle2,
-  Calendar, Users, TrendingDown, RefreshCw, Award,
+  Calendar, Users, TrendingDown, RefreshCw, Award, ClipboardList,
 } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { pt } from 'date-fns/locale';
 import { supabase } from '../lib/supabase';
 import { getBusinessDays } from '../utils/dateUtils';
 import { motion } from 'framer-motion';
@@ -17,9 +19,10 @@ const DEFAULT_CHECKLIST = [
 ];
 
 const Compliance = () => {
-  const [workers,  setWorkers]  = useState([]);
-  const [requests, setRequests] = useState([]);
-  const [loading,  setLoading]  = useState(true);
+  const [workers,   setWorkers]   = useState([]);
+  const [requests,  setRequests]  = useState([]);
+  const [auditLog,  setAuditLog]  = useState([]);
+  const [loading,   setLoading]   = useState(true);
   const [checklist, setChecklist] = useState(() => {
     try {
       const saved = localStorage.getItem(CHECKLIST_KEY);
@@ -32,7 +35,7 @@ const Compliance = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [{ data: profiles }, { data: reqs }] = await Promise.all([
+      const [{ data: profiles }, { data: reqs }, { data: logs }] = await Promise.all([
         supabase
           .from('profiles')
           .select('id, full_name, department, vacation_balance, role, nif, cni, hire_date, job_title'),
@@ -40,9 +43,15 @@ const Compliance = () => {
           .from('leave_requests')
           .select('id, user_id, start_date, end_date, status, type, description, profiles!leave_requests_user_id_fkey(full_name, department, nif, cni, hire_date, job_title)')
           .order('start_date', { ascending: true }),
+        supabase
+          .from('audit_log')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(50),
       ]);
       setWorkers(profiles || []);
       setRequests(reqs || []);
+      setAuditLog(logs || []);
     } catch (err) {
       console.error('Compliance fetchData:', err);
     } finally {
@@ -285,6 +294,53 @@ const Compliance = () => {
               </div>
             </div>
           )}
+          {/* Audit Log */}
+          <div className="bg-white rounded-radius border border-border shadow-sm overflow-hidden">
+            <div className="px-5 py-3.5 border-b border-border bg-slate-50/60 flex items-center gap-2">
+              <ClipboardList size={15} className="text-primary" />
+              <span className="text-sm font-bold text-text">Log de Auditoria</span>
+              <span className="ml-auto text-[10px] text-text-muted">Últimas 50 ações</span>
+            </div>
+            {loading ? (
+              <div className="py-8 flex items-center justify-center">
+                <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+              </div>
+            ) : auditLog.length === 0 ? (
+              <div className="py-8 text-center text-xs text-text-muted">Nenhuma ação registada ainda.</div>
+            ) : (
+              <div className="divide-y divide-border/40">
+                {auditLog.map(entry => {
+                  const actionLabel = {
+                    leave_approved:  { label: 'Férias aprovadas',  color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+                    leave_rejected:  { label: 'Férias recusadas',  color: 'text-red-700 bg-red-50 border-red-200' },
+                    profile_updated: { label: 'Perfil atualizado', color: 'text-blue-700 bg-blue-50 border-blue-200' },
+                  }[entry.action] || { label: entry.action, color: 'text-text-muted bg-bg border-border' };
+                  return (
+                    <div key={entry.id} className="px-5 py-3 flex items-start gap-3 hover:bg-bg/40 transition-colors">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0 mt-0.5 ${actionLabel.color}`}>
+                        {actionLabel.label}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-text font-medium truncate">
+                          por <strong>{entry.actor_name || 'Sistema'}</strong>
+                        </p>
+                        {entry.details && (
+                          <p className="text-[11px] text-text-muted mt-0.5">
+                            {entry.details.start_date && `${entry.details.start_date} → ${entry.details.end_date}`}
+                            {entry.details.role_to && entry.details.role_from !== entry.details.role_to && ` cargo: ${entry.details.role_from} → ${entry.details.role_to}`}
+                            {entry.details.balance_to !== undefined && entry.details.balance_from !== entry.details.balance_to && ` saldo: ${entry.details.balance_from} → ${entry.details.balance_to} dias`}
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-text-muted flex-shrink-0">
+                        {format(parseISO(entry.created_at), 'd MMM HH:mm', { locale: pt })}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Sidebar ── 1/3 */}
