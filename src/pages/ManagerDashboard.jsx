@@ -77,7 +77,10 @@ const ManagerDashboard = () => {
       }));
       setRequests(formattedRequests);
 
-      const { data: profilesData } = await supabase.from('profiles').select('*');
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('company_id', profile.company_id);
       const profiles = profilesData || [];
 
       const { data: approvedData } = await supabase

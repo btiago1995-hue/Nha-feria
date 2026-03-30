@@ -26,6 +26,7 @@ const LeaveRequestForm = () => {
 
   const [businessDays, setBusinessDays] = useState(0);
   const [error, setError] = useState(null);
+  const [overlapWarning, setOverlapWarning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const availableBalance = profile?.vacation_balance || 22;
@@ -34,25 +35,37 @@ const LeaveRequestForm = () => {
     if (formData.startDate && formData.endDate) {
       const start = new Date(formData.startDate);
       const end = new Date(formData.endDate);
-      
+
       if (start <= end) {
         const days = getBusinessDays(formData.startDate, formData.endDate);
         setBusinessDays(days);
-        
+
         if (formData.type !== 'justificação' && days > availableBalance) {
           setError('Saldo insuficiente para este período.');
         } else {
           setError(null);
         }
+
+        // Check for overlapping requests
+        supabase
+          .from('leave_requests')
+          .select('id')
+          .eq('user_id', profile.id)
+          .not('status', 'in', '("rejected","cancelled")')
+          .lte('start_date', formData.endDate)
+          .gte('end_date', formData.startDate)
+          .then(({ data }) => setOverlapWarning((data || []).length > 0));
       } else {
         setBusinessDays(0);
+        setOverlapWarning(false);
         setError('A data de início deve ser anterior à data de fim.');
       }
     } else {
       setBusinessDays(0);
+      setOverlapWarning(false);
       setError(null);
     }
-  }, [formData, availableBalance]);
+  }, [formData, availableBalance, profile.id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -197,6 +210,15 @@ const LeaveRequestForm = () => {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {overlapWarning && !error && (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex gap-3 items-start">
+              <AlertCircle className="text-amber-600 flex-shrink-0" size={18} />
+              <p className="text-[12px] text-amber-800 leading-relaxed">
+                <strong>Atenção:</strong> Já tens um pedido pendente ou aprovado que coincide com este período. Podes submeter na mesma, mas o teu gestor poderá recusar por sobreposição.
+              </p>
+            </div>
+          )}
 
           {profile?.tenureMonths < 6 && formData.type !== 'justificação' && (
             <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex gap-3 items-start">

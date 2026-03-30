@@ -229,7 +229,7 @@ const SettingsPage = () => {
     setResetLoading(true);
     try {
       await supabase.auth.resetPasswordForEmail(session.user.email, {
-        redirectTo: `${window.location.origin}/login`,
+        redirectTo: `${window.location.origin}/reset-password`,
       });
       setResetSent(true);
     } catch (err) {

@@ -850,7 +850,7 @@ const LandingPage = () => {
               <ArrowRight size={15} />
             </button>
             <a
-              href="https://wa.me/2389XXXXXXX"
+              href="https://wa.me/2385856003"
               target="_blank"
               rel="noreferrer"
               className="w-full sm:w-auto flex items-center justify-center gap-2 text-sm font-semibold text-white/60 hover:text-white transition-colors py-3.5 px-6 border border-white/10 rounded-lg"

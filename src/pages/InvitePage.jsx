@@ -59,8 +59,15 @@ const InvitePage = () => {
         email:    formData.email,
         password: formData.password,
         options: {
-          data: { full_name: invite.full_name },
-          // After confirmation, redirect back to the app
+          // invite_token lets the DB trigger apply company/dept/balance even after email confirmation
+          data: {
+            full_name:    invite.full_name,
+            invite_token: token,
+            nif:          formData.nif.trim()       || null,
+            cni:          formData.cni.trim()       || null,
+            hire_date:    formData.hire_date        || null,
+            job_title:    formData.job_title.trim() || null,
+          },
           emailRedirectTo: `${window.location.origin}/worker-dashboard`,
         },
       });

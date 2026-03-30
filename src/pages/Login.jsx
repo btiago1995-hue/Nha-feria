@@ -23,6 +23,7 @@ const Login = () => {
   const [signupConfirm, setSignupConfirm]   = useState('');
   const [showSignupPass, setShowSignupPass] = useState(false);
   const [signupDone, setSignupDone]         = useState(false);
+  const [tosAccepted, setTosAccepted]       = useState(false);
 
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState(null);
@@ -35,7 +36,9 @@ const Login = () => {
   const handleForgotPassword = async () => {
     if (!email) { setError('Introduz o teu email para recuperar a palavra-passe.'); return; }
     try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email);
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
       if (resetError) throw resetError;
       setResetSent(true);
       setError(null);
@@ -394,17 +397,29 @@ const Login = () => {
                     </div>
                   </div>
 
+                  <label className="flex items-start gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      required
+                      checked={tosAccepted}
+                      onChange={e => setTosAccepted(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-gray-300 text-primary-light focus:ring-primary-light flex-shrink-0"
+                    />
+                    <span className="text-[11px] text-text-muted leading-relaxed">
+                      Li e aceito os{' '}
+                      <a href="/terms" target="_blank" className="font-semibold text-primary-light hover:underline">Termos de Serviço</a>
+                      {' '}e a{' '}
+                      <a href="/privacy" target="_blank" className="font-semibold text-primary-light hover:underline">Política de Privacidade</a>.
+                    </span>
+                  </label>
+
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || !tosAccepted}
                     className="w-full py-3.5 bg-accent text-primary text-sm font-bold rounded-radius-sm hover:bg-accent-hover hover:-translate-y-px hover:shadow-md active:translate-y-0 shadow-sm shadow-accent/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed font-display mt-2"
                   >
                     {loading ? 'A criar conta...' : 'Criar conta grátis →'}
                   </button>
-
-                  <p className="text-[11px] text-text-muted text-center pt-1">
-                    Ao criar conta aceitas os nossos Termos de Serviço e Política de Privacidade.
-                  </p>
                 </form>
 
                 <p className="mt-5 text-center text-xs text-text-muted">

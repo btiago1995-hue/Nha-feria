@@ -49,10 +49,11 @@ const ManagerCalendar = () => {
         .eq('profiles.company_id', company?.id || '')
         .order('start_date', { ascending: true });
 
-      // Team size
+      // Team size (scoped to this company)
       const { count } = await supabase
         .from('profiles')
-        .select('id', { count: 'exact', head: true });
+        .select('id', { count: 'exact', head: true })
+        .eq('company_id', company?.id || '');
       setTeamSize(count || 0);
 
       const today = new Date().toISOString().split('T')[0];

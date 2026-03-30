@@ -231,7 +231,7 @@ const HistoryModal = ({ worker, onClose }) => {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const EmployeeDirectory = () => {
-  const { departments }               = useCompany() || {};
+  const { departments, company }      = useCompany() || {};
   const [isModalOpen,   setIsModalOpen]   = useState(false);
   const [searchTerm,    setSearchTerm]    = useState('');
   const [deptFilter,    setDeptFilter]    = useState('');
@@ -249,6 +249,7 @@ const EmployeeDirectory = () => {
       const { data: profiles } = await supabase
         .from('profiles')
         .select('*')
+        .eq('company_id', company?.id || '')
         .order('full_name', { ascending: true });
 
       const { data: approvedReqs } = await supabase
