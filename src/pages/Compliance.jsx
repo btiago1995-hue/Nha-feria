@@ -37,9 +37,17 @@ const Compliance = () => {
   useEffect(() => { fetchData(); }, []);
   useEffect(() => {
     if (!quadroMenu) return;
-    const close = () => setQuadroMenu(false);
-    document.addEventListener('click', close, { once: true });
-    return () => document.removeEventListener('click', close);
+    const close = (e) => {
+      setQuadroMenu(false);
+    };
+    // Delay to avoid catching the same click that opened the menu
+    const timer = setTimeout(() => {
+      document.addEventListener('click', close, { once: true });
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', close);
+    };
   }, [quadroMenu]);
 
   const fetchData = async () => {
@@ -252,9 +260,18 @@ const Compliance = () => {
 </body>
 </html>`;
 
-    const win = window.open('', '_blank');
-    win.document.write(html);
-    win.document.close();
+    // Use Blob URL to avoid popup blocker issues
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const win = window.open(url, '_blank');
+    if (!win) {
+      // Popup blocked — fallback: download as HTML
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'quadro-pessoal-dgt-2026.html';
+      a.click();
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
   };
 
   // ── CSV exports ───────────────────────────────────────────────────────────
