@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import {
   FileText, Download, ShieldCheck, AlertTriangle, CheckCircle2,
   Calendar, Users, TrendingDown, RefreshCw, Award, ClipboardList,
+  Printer, ChevronDown,
 } from 'lucide-react';
+import { useCompany } from '../lib/CompanyContext';
 import { format, parseISO } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { supabase } from '../lib/supabase';
@@ -19,10 +21,12 @@ const DEFAULT_CHECKLIST = [
 ];
 
 const Compliance = () => {
+  const { company } = useCompany() || {};
   const [workers,   setWorkers]   = useState([]);
   const [requests,  setRequests]  = useState([]);
   const [auditLog,  setAuditLog]  = useState([]);
   const [loading,   setLoading]   = useState(true);
+  const [quadroMenu, setQuadroMenu] = useState(false);
   const [checklist, setChecklist] = useState(() => {
     try {
       const saved = localStorage.getItem(CHECKLIST_KEY);
@@ -31,6 +35,12 @@ const Compliance = () => {
   });
 
   useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    if (!quadroMenu) return;
+    const close = () => setQuadroMenu(false);
+    document.addEventListener('click', close, { once: true });
+    return () => document.removeEventListener('click', close);
+  }, [quadroMenu]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -38,7 +48,7 @@ const Compliance = () => {
       const [{ data: profiles }, { data: reqs }, { data: logs }] = await Promise.all([
         supabase
           .from('profiles')
-          .select('id, full_name, department, vacation_balance, role, nif, cni, hire_date, job_title'),
+          .select('id, full_name, department, vacation_balance, role, nif, cni, hire_date, job_title, island, gender, birth_date, inps_number, education_level, employment_status, base_salary, food_allowance, weekly_hours, last_promotion_date'),
         supabase
           .from('leave_requests')
           .select('id, user_id, start_date, end_date, status, type, description, profiles!leave_requests_user_id_fkey(full_name, department, nif, cni, hire_date, job_title)')
@@ -96,6 +106,155 @@ const Compliance = () => {
     );
     setChecklist(updated);
     localStorage.setItem(CHECKLIST_KEY, JSON.stringify(updated));
+  };
+
+  // ── Quadro de Pessoal exports ─────────────────────────────────────────────
+  const fmtDate = (d) => {
+    if (!d) return '—';
+    try { return format(parseISO(d), 'dd/MM/yyyy', { locale: pt }); } catch { return d; }
+  };
+  const fmtCurrency = (v) => v != null ? Number(v).toLocaleString('pt-CV', { minimumFractionDigits: 2 }) + ' CVE' : '—';
+
+  const buildQuadroRows = () => {
+    const approved = requests.filter(r => r.status === 'approved');
+    const leaveByUser = approved.reduce((acc, r) => {
+      if (!acc[r.user_id]) acc[r.user_id] = [];
+      acc[r.user_id].push(r);
+      return acc;
+    }, {});
+
+    return workers.map((w, i) => {
+      const leaves = leaveByUser[w.id] || [];
+      const periods = leaves.map(r => `${fmtDate(r.start_date)} a ${fmtDate(r.end_date)}`).join(' / ') || '—';
+      return {
+        linha: i + 1,
+        nome: w.full_name || '—',
+        cargo: w.job_title || '—',
+        situacao: w.employment_status || '—',
+        habilitacao: w.education_level || '—',
+        inps: w.inps_number || '—',
+        sexo: w.gender || '—',
+        nascimento: fmtDate(w.birth_date),
+        admissao: fmtDate(w.hire_date),
+        progressao: fmtDate(w.last_promotion_date),
+        ilha: w.island || '—',
+        salario: fmtCurrency(w.base_salary),
+        subsidio: fmtCurrency(w.food_allowance),
+        horas: w.weekly_hours ? `${w.weekly_hours}h/semana` : '—',
+        ferias: periods,
+      };
+    });
+  };
+
+  const exportQuadroCsv = () => {
+    const rows = buildQuadroRows();
+    const header = [
+      'Linha','Nome','Cargo Profissional','Situação na Profissão','Habilitação',
+      'Nº INPS','Sexo','Data Nascimento','Data Admissão','Última Progressão',
+      'Ilha','Remuneração Base','Subsídio Alimentação','Horas Semanais','Períodos de Férias',
+    ];
+    const data = rows.map(r => [
+      r.linha, r.nome, r.cargo, r.situacao, r.habilitacao,
+      r.inps, r.sexo, r.nascimento, r.admissao, r.progressao,
+      r.ilha, r.salario, r.subsidio, r.horas, r.ferias,
+    ]);
+    downloadCsv([header, ...data], 'quadro-pessoal-dgt-2026.csv');
+  };
+
+  const exportQuadroPdf = () => {
+    const rows = buildQuadroRows();
+    const companyName = company?.name || 'Empresa';
+    const companyNif  = company?.nif  || '';
+    const today2 = format(new Date(), 'dd/MM/yyyy', { locale: pt });
+
+    const tableRows = rows.map((r, idx) => `
+      <tr style="background:${idx % 2 === 0 ? '#f9fafb' : '#fff'}">
+        <td>${r.linha}</td>
+        <td>${r.nome}</td>
+        <td>${r.cargo}</td>
+        <td>${r.cargo}</td>
+        <td>${r.situacao}</td>
+        <td>${r.habilitacao}</td>
+        <td>${r.inps}</td>
+        <td>${r.sexo}</td>
+        <td>${r.nascimento}</td>
+        <td>${r.admissao}</td>
+        <td>${r.progressao}</td>
+        <td>${r.ilha}</td>
+        <td>${r.salario}</td>
+        <td>${r.subsidio}</td>
+        <td>${r.horas}</td>
+        <td>${r.ferias}</td>
+      </tr>`).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <title>Quadro de Pessoal DGT 2026 — ${companyName}</title>
+  <style>
+    @page { size: A3 landscape; margin: 15mm; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; font-size: 8px; color: #111; margin: 0; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .header h1 { font-size: 13px; margin: 0 0 4px; }
+    .header p  { font-size: 8px; color: #555; margin: 0; }
+    .meta { text-align: right; font-size: 8px; color: #555; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: #1e3a5f; color: #fff; padding: 5px 4px; text-align: center; font-size: 7px; border: 1px solid #ccc; }
+    td { padding: 4px 3px; border: 1px solid #ddd; text-align: center; vertical-align: middle; }
+    td:nth-child(2) { text-align: left; }
+    .footer { margin-top: 20px; display: flex; justify-content: space-between; font-size: 8px; color: #555; }
+    .sign-box { border-top: 1px solid #888; width: 200px; padding-top: 4px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>Quadro de Pessoal — ${companyName}</h1>
+      <p>NIF: ${companyNif} &nbsp;|&nbsp; Referente ao ano de 2026 &nbsp;|&nbsp; Emitido em ${today2}</p>
+      <p>Direção Geral do Trabalho — Código Laboral CV, Art. 158.º-A</p>
+    </div>
+    <div class="meta">Nha Féria &bull; nhaferia.cv</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Linha</th>
+        <th>Nome</th>
+        <th>Cargo Profissional</th>
+        <th>Profissão</th>
+        <th>Situação na Profissão</th>
+        <th>Habilitação</th>
+        <th>Nº INPS</th>
+        <th>Sexo</th>
+        <th>Nascimento</th>
+        <th>Admissão</th>
+        <th>Progressão</th>
+        <th>Ilha</th>
+        <th>Remun. Base</th>
+        <th>Sub. Alimentação</th>
+        <th>Horas/Semana</th>
+        <th>Período de Férias</th>
+      </tr>
+    </thead>
+    <tbody>${tableRows}</tbody>
+  </table>
+
+  <div class="footer">
+    <div class="sign-box">Responsável pela Empresa / Gerência</div>
+    <div class="sign-box">Carimbo da Empresa</div>
+    <div class="sign-box">Chefe da Repartição — DGT</div>
+  </div>
+
+  <script>window.onload = () => { window.print(); }<\/script>
+</body>
+</html>`;
+
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
   };
 
   // ── CSV exports ───────────────────────────────────────────────────────────
@@ -205,6 +364,53 @@ const Compliance = () => {
               <div className="text-center flex-shrink-0 px-2">
                 <div className="text-3xl font-bold text-primary leading-tight">{requests.length}</div>
                 <div className="text-[10px] text-text-muted font-medium uppercase tracking-wide">pedidos</div>
+              </div>
+            )}
+          </div>
+
+          {/* Quadro de Pessoal DGT card */}
+          <div className="bg-white rounded-radius border border-border shadow-sm p-6 flex flex-col sm:flex-row gap-5 items-center">
+            <div className="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600 flex-shrink-0">
+              <Users size={26} />
+            </div>
+            <div className="flex-1 text-center sm:text-left">
+              <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">Documento Obrigatório DGT</div>
+              <h3 className="text-base font-bold text-text mb-1">Quadro de Pessoal 2026</h3>
+              <p className="text-xs text-text-muted mb-4 max-w-sm leading-relaxed">
+                Todos os colaboradores com dados completos para entrega à Direção Geral do Trabalho. Escolhe o formato de exportação.
+              </p>
+              <div className="relative inline-block">
+                <button
+                  onClick={() => setQuadroMenu(o => !o)}
+                  disabled={loading}
+                  className="inline-flex items-center gap-2 px-5 py-2 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-all text-xs shadow-sm disabled:opacity-50 cursor-pointer"
+                >
+                  <Download size={14} /> Exportar
+                  <ChevronDown size={13} className={`transition-transform ${quadroMenu ? 'rotate-180' : ''}`} />
+                </button>
+                {quadroMenu && (
+                  <div className="absolute left-0 top-full mt-1 w-44 bg-white border border-border rounded-radius-sm shadow-lg z-20 overflow-hidden">
+                    <button
+                      onClick={() => { exportQuadroPdf(); setQuadroMenu(false); }}
+                      className="flex items-center gap-2.5 w-full px-4 py-3 text-xs font-semibold text-text hover:bg-bg transition-colors"
+                    >
+                      <Printer size={14} className="text-primary" /> Exportar PDF
+                    </button>
+                    <div className="border-t border-border" />
+                    <button
+                      onClick={() => { exportQuadroCsv(); setQuadroMenu(false); }}
+                      className="flex items-center gap-2.5 w-full px-4 py-3 text-xs font-semibold text-text hover:bg-bg transition-colors"
+                    >
+                      <FileText size={14} className="text-emerald-600" /> Exportar CSV
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            {!loading && (
+              <div className="text-center flex-shrink-0 px-2">
+                <div className="text-3xl font-bold text-emerald-600 leading-tight">{workers.length}</div>
+                <div className="text-[10px] text-text-muted font-medium uppercase tracking-wide">colaboradores</div>
               </div>
             )}
           </div>

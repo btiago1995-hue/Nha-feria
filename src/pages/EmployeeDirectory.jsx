@@ -27,19 +27,52 @@ const itemVariants = {
   visible: { y: 0,  opacity: 1 },
 };
 
+const ISLANDS = ['Santiago','São Vicente','Santo Antão','Fogo','Sal','Boa Vista','Maio','São Nicolau','Brava','Santa Luzia'];
+const inp = 'w-full px-3 py-2 border border-border rounded-radius-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white';
+const Section = ({ label, children }) => (
+  <div>
+    <p className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2">{label}</p>
+    <div className="grid grid-cols-2 gap-3">{children}</div>
+  </div>
+);
+const Field = ({ label, children, span }) => (
+  <div className={`space-y-1 ${span === 2 ? 'col-span-2' : ''}`}>
+    <label className="text-[11px] font-semibold text-text-muted">{label}</label>
+    {children}
+  </div>
+);
+const EDUCATION_LEVELS = ['Sem habilitação','Ensino Básico','Ensino Secundário','Bacharelato','Licenciatura','Mestrado','Doutoramento'];
+const EMPLOYMENT_STATUSES = ['Permanente','Contrato a Prazo','Contrato de Trabalho Temporário','Prestação de Serviços','Estágio','Outro'];
+
 // ─── Edit Modal ──────────────────────────────────────────────────────────────
 const EditEmployeeModal = ({ worker, departments, onClose, onSaved }) => {
   const [form, setForm]         = useState({
-    full_name:        worker.name,
-    department:       worker.department,
-    role:             worker.role,
-    vacation_balance: worker.balance,
+    full_name:            worker.name,
+    department:           worker.department,
+    role:                 worker.role,
+    vacation_balance:     worker.balance,
+    nif:                  worker.nif || '',
+    cni:                  worker.cni || '',
+    job_title:            worker.job_title || '',
+    hire_date:            worker.hire_date || '',
+    island:               worker.island || '',
+    gender:               worker.gender || '',
+    birth_date:           worker.birth_date || '',
+    inps_number:          worker.inps_number || '',
+    education_level:      worker.education_level || '',
+    employment_status:    worker.employment_status || '',
+    base_salary:          worker.base_salary || '',
+    food_allowance:       worker.food_allowance || '',
+    weekly_hours:         worker.weekly_hours || 40,
+    last_promotion_date:  worker.last_promotion_date || '',
   });
   const [saving,    setSaving]   = useState(false);
   const [deleting,  setDeleting] = useState(false);
   const [confirmDel, setConfirmDel] = useState('');
   const [showDel,   setShowDel]  = useState(false);
   const [error,     setError]    = useState('');
+
+  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -48,11 +81,25 @@ const EditEmployeeModal = ({ worker, departments, onClose, onSaved }) => {
     const { error: err } = await supabase
       .from('profiles')
       .update({
-        full_name:        form.full_name,
-        department:       form.department,
-        role:             form.role,
-        vacation_balance: Number(form.vacation_balance),
-        updated_at:       new Date().toISOString(),
+        full_name:            form.full_name,
+        department:           form.department,
+        role:                 form.role,
+        vacation_balance:     Number(form.vacation_balance),
+        nif:                  form.nif.trim() || null,
+        cni:                  form.cni.trim() || null,
+        job_title:            form.job_title.trim() || null,
+        hire_date:            form.hire_date || null,
+        island:               form.island || null,
+        gender:               form.gender || null,
+        birth_date:           form.birth_date || null,
+        inps_number:          form.inps_number.trim() || null,
+        education_level:      form.education_level || null,
+        employment_status:    form.employment_status || null,
+        base_salary:          form.base_salary !== '' ? Number(form.base_salary) : null,
+        food_allowance:       form.food_allowance !== '' ? Number(form.food_allowance) : null,
+        weekly_hours:         form.weekly_hours ? Number(form.weekly_hours) : 40,
+        last_promotion_date:  form.last_promotion_date || null,
+        updated_at:           new Date().toISOString(),
       })
       .eq('id', worker.id);
 
@@ -86,53 +133,97 @@ const EditEmployeeModal = ({ worker, departments, onClose, onSaved }) => {
           <button onClick={onClose} className="text-text-muted hover:text-text transition-colors"><X size={20} /></button>
         </div>
 
-        <form onSubmit={handleSave} className="p-6 space-y-4">
+        <form onSubmit={handleSave} className="p-6 space-y-5 overflow-y-auto max-h-[70vh]">
           {error && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-text uppercase tracking-wider">Nome Completo</label>
-            <input
-              type="text" required
-              className="w-full px-3 py-2 border border-border rounded-radius-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              value={form.full_name}
-              onChange={e => setForm({ ...form, full_name: e.target.value })}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-text uppercase tracking-wider">Departamento</label>
-              <select
-                className="w-full px-3 py-2 border border-border rounded-radius-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                value={form.department}
-                onChange={e => setForm({ ...form, department: e.target.value })}
-              >
+          {/* ── Dados gerais ── */}
+          <Section label="Dados Gerais">
+            <Field label="Nome Completo" span={2}>
+              <input type="text" required className={inp} value={form.full_name} onChange={e => set('full_name', e.target.value)} />
+            </Field>
+            <Field label="Departamento">
+              <select className={inp} value={form.department} onChange={e => set('department', e.target.value)}>
                 {(departments || []).map(d => <option key={d}>{d}</option>)}
               </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-text uppercase tracking-wider">Cargo</label>
-              <select
-                className="w-full px-3 py-2 border border-border rounded-radius-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                value={form.role}
-                onChange={e => setForm({ ...form, role: e.target.value })}
-              >
+            </Field>
+            <Field label="Perfil de acesso">
+              <select className={inp} value={form.role} onChange={e => set('role', e.target.value)}>
                 <option value="employee">Colaborador</option>
                 <option value="manager">Gestor</option>
                 <option value="admin">Administrador</option>
               </select>
-            </div>
-          </div>
+            </Field>
+            <Field label="Saldo de Férias (dias)" span={2}>
+              <input type="number" min="0" max="60" className={inp} value={form.vacation_balance} onChange={e => set('vacation_balance', e.target.value)} />
+            </Field>
+          </Section>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-text uppercase tracking-wider">Saldo de Férias (dias)</label>
-            <input
-              type="number" min="0" max="60"
-              className="w-full px-3 py-2 border border-border rounded-radius-sm text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              value={form.vacation_balance}
-              onChange={e => setForm({ ...form, vacation_balance: e.target.value })}
-            />
-          </div>
+          {/* ── Identificação ── */}
+          <Section label="Identificação">
+            <Field label="NIF">
+              <input type="text" className={inp} placeholder="000000000" value={form.nif} onChange={e => set('nif', e.target.value)} />
+            </Field>
+            <Field label="CNI / BI">
+              <input type="text" className={inp} value={form.cni} onChange={e => set('cni', e.target.value)} />
+            </Field>
+            <Field label="Nº INPS (Previdência)">
+              <input type="text" className={inp} placeholder="Nº beneficiário" value={form.inps_number} onChange={e => set('inps_number', e.target.value)} />
+            </Field>
+            <Field label="Sexo">
+              <select className={inp} value={form.gender} onChange={e => set('gender', e.target.value)}>
+                <option value="">—</option>
+                <option value="M">Masculino</option>
+                <option value="F">Feminino</option>
+              </select>
+            </Field>
+            <Field label="Data de Nascimento" span={2}>
+              <input type="date" className={inp} value={form.birth_date} onChange={e => set('birth_date', e.target.value)} />
+            </Field>
+          </Section>
+
+          {/* ── Dados profissionais ── */}
+          <Section label="Dados Profissionais (DGT)">
+            <Field label="Função / Cargo Profissional" span={2}>
+              <input type="text" className={inp} placeholder="Ex: Contabilista" value={form.job_title} onChange={e => set('job_title', e.target.value)} />
+            </Field>
+            <Field label="Situação na Profissão" span={2}>
+              <select className={inp} value={form.employment_status} onChange={e => set('employment_status', e.target.value)}>
+                <option value="">—</option>
+                {EMPLOYMENT_STATUSES.map(s => <option key={s}>{s}</option>)}
+              </select>
+            </Field>
+            <Field label="Habilitação Literária" span={2}>
+              <select className={inp} value={form.education_level} onChange={e => set('education_level', e.target.value)}>
+                <option value="">—</option>
+                {EDUCATION_LEVELS.map(e => <option key={e}>{e}</option>)}
+              </select>
+            </Field>
+            <Field label="Data de Admissão">
+              <input type="date" className={inp} value={form.hire_date} onChange={e => set('hire_date', e.target.value)} />
+            </Field>
+            <Field label="Última Progressão">
+              <input type="date" className={inp} value={form.last_promotion_date} onChange={e => set('last_promotion_date', e.target.value)} />
+            </Field>
+            <Field label="Ilha">
+              <select className={inp} value={form.island} onChange={e => set('island', e.target.value)}>
+                <option value="">—</option>
+                {ISLANDS.map(i => <option key={i}>{i}</option>)}
+              </select>
+            </Field>
+            <Field label="Horas Semanais">
+              <input type="number" min="1" max="60" className={inp} value={form.weekly_hours} onChange={e => set('weekly_hours', e.target.value)} />
+            </Field>
+          </Section>
+
+          {/* ── Remuneração ── */}
+          <Section label="Remuneração">
+            <Field label="Remuneração Base (CVE)">
+              <input type="number" min="0" step="0.01" className={inp} placeholder="0.00" value={form.base_salary} onChange={e => set('base_salary', e.target.value)} />
+            </Field>
+            <Field label="Subsídio Alimentação (CVE)">
+              <input type="number" min="0" step="0.01" className={inp} placeholder="0.00" value={form.food_allowance} onChange={e => set('food_allowance', e.target.value)} />
+            </Field>
+          </Section>
 
           <div className="pt-2 flex justify-end gap-3">
             <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-semibold text-text-muted hover:text-text hover:bg-bg rounded-radius-sm transition-colors">
@@ -301,7 +392,7 @@ const EmployeeDirectory = () => {
     try {
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, full_name, role, department, vacation_balance, created_at, nif, cni, job_title, hire_date')
+        .select('id, full_name, role, department, vacation_balance, created_at, nif, cni, job_title, hire_date, island, gender, birth_date, inps_number, education_level, employment_status, base_salary, food_allowance, weekly_hours, last_promotion_date')
         .eq('company_id', company?.id || '')
         .order('full_name', { ascending: true });
 
@@ -324,18 +415,28 @@ const EmployeeDirectory = () => {
       }, {});
 
       setTeam((profiles || []).map(p => ({
-        id:           p.id,
-        name:         p.full_name,
-        role:         p.role,
-        department:   p.department || 'Geral',
-        avatar:       p.full_name?.charAt(0)?.toUpperCase() || 'U',
-        balance:      p.vacation_balance || 22,
-        used:         usedDaysMap[p.id] || 0,
-        tenureMonths: tenureMap[p.id] || 0,
-        nif:          p.nif || null,
-        cni:          p.cni || null,
-        job_title:    p.job_title || null,
-        hire_date:    p.hire_date || null,
+        id:                  p.id,
+        name:                p.full_name,
+        role:                p.role,
+        department:          p.department || 'Geral',
+        avatar:              p.full_name?.charAt(0)?.toUpperCase() || 'U',
+        balance:             p.vacation_balance || 22,
+        used:                usedDaysMap[p.id] || 0,
+        tenureMonths:        tenureMap[p.id] || 0,
+        nif:                 p.nif || null,
+        cni:                 p.cni || null,
+        job_title:           p.job_title || null,
+        hire_date:           p.hire_date || null,
+        island:              p.island || null,
+        gender:              p.gender || null,
+        birth_date:          p.birth_date || null,
+        inps_number:         p.inps_number || null,
+        education_level:     p.education_level || null,
+        employment_status:   p.employment_status || null,
+        base_salary:         p.base_salary || null,
+        food_allowance:      p.food_allowance || null,
+        weekly_hours:        p.weekly_hours || 40,
+        last_promotion_date: p.last_promotion_date || null,
       })));
     } catch (err) {
       console.error('Error fetching team data:', err);
