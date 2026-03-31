@@ -83,6 +83,33 @@ const TermsOfUse = () => (
           </ul>
         </Section>
 
+        <Section title="4-A. Tratamento de Dados Pessoais (DPA)">
+          <p>
+            No âmbito da utilização da plataforma Nha Féria, as partes assumem os seguintes papéis ao abrigo
+            da legislação de proteção de dados de Cabo Verde (Lei n.º 133/V/2001) e do RGPD:
+          </p>
+          <ul className="list-disc pl-5 space-y-1.5">
+            <li>
+              <strong>Responsável pelo Tratamento:</strong> A empresa utilizadora (o seu cliente ou organização)
+              é o Responsável pelo Tratamento dos dados pessoais dos seus colaboradores. Define os fins e os
+              meios do tratamento e é responsável pelo cumprimento das obrigações legais perante os titulares
+              dos dados e as autoridades competentes (CNPD, IGT).
+            </li>
+            <li>
+              <strong>Subprocessador:</strong> A Servyx Labs, através da plataforma Nha Féria, atua exclusivamente
+              como Subprocessador. Trata os dados apenas segundo as instruções do Responsável, implementa
+              medidas de segurança adequadas e não utiliza os dados para fins próprios.
+            </li>
+          </ul>
+          <p>
+            A Servyx Labs compromete-se a: (i) tratar os dados apenas para as finalidades contratadas;
+            (ii) garantir a confidencialidade dos dados; (iii) notificar o Responsável de qualquer violação
+            de segurança no prazo de 72 horas; (iv) auxiliar o Responsável no cumprimento dos direitos
+            dos titulares (acesso, eliminação, portabilidade); (v) eliminar ou devolver todos os dados
+            no final do contrato.
+          </p>
+        </Section>
+
         <Section title="5. Propriedade dos dados">
           <p>
             Os dados que introduz na plataforma (informações de colaboradores, pedidos de férias, etc.)

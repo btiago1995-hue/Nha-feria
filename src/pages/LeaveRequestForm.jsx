@@ -42,6 +42,8 @@ const LeaveRequestForm = () => {
 
         if (formData.type !== 'justificação' && days > availableBalance) {
           setError('Saldo insuficiente para este período.');
+        } else if (formData.type === 'férias' && days < 10) {
+          setError('O Código Laboral de Cabo Verde exige um mínimo de 10 dias úteis consecutivos por período de férias anuais (Art. 162º).');
         } else {
           setError(null);
         }

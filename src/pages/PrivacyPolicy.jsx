@@ -86,6 +86,25 @@ const PrivacyPolicy = () => (
           <p>
             Não transferimos dados para países sem nível de proteção adequado sem as garantias exigidas por lei.
           </p>
+          <p><strong>Subprocessadores:</strong> Para prestar o serviço, a Servyx Labs recorre aos seguintes subprocessadores:</p>
+          <ul className="list-disc pl-5 space-y-1.5">
+            <li><strong>Supabase Inc.</strong> — Base de dados e autenticação (AWS Frankfurt, UE)</li>
+            <li><strong>Resend Inc.</strong> — Envio de e-mails transacionais (EUA, com Cláusulas Contratuais Padrão)</li>
+            <li><strong>Vercel Inc.</strong> — Alojamento da aplicação web (EUA, com Cláusulas Contratuais Padrão)</li>
+          </ul>
+        </Section>
+
+        <Section title="5-A. Autoridade de Proteção de Dados (CNPD)">
+          <p>
+            Em Cabo Verde, a entidade responsável pela supervisão do tratamento de dados pessoais é a{' '}
+            <strong>Comissão Nacional de Proteção de Dados (CNPD)</strong>. A Servyx Labs está registada
+            junto da CNPD como operadora de tratamento de dados para fins de gestão de recursos humanos,
+            nos termos da Lei n.º 133/V/2001 de 22 de janeiro.
+          </p>
+          <p>
+            Se considerar que o tratamento dos seus dados viola a legislação aplicável, tem o direito de
+            apresentar reclamação junto da CNPD: <strong>cnpd.cv</strong> | Praia, Santiago, Cabo Verde.
+          </p>
         </Section>
 
         <Section title="6. Por quanto tempo guardamos os dados">
