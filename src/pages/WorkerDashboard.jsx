@@ -69,7 +69,8 @@ const WorkerDashboard = () => {
         .from('leave_requests')
         .select('*')
         .eq('user_id', profile.id)
-        .order('start_date', { ascending: false });
+        .order('start_date', { ascending: false })
+        .limit(100);
       if (reqError) throw reqError;
       setRequests(reqs || []);
 
@@ -99,7 +100,8 @@ const WorkerDashboard = () => {
         .from('leave_requests')
         .select('start_date, end_date, profiles!leave_requests_user_id_fkey(full_name)')
         .eq('status', 'approved')
-        .neq('user_id', profile.id);
+        .neq('user_id', profile.id)
+        .limit(500);
 
       setTeamAbsences(expandAbsences(teamReqs || []));
 

@@ -290,7 +290,8 @@ const HistoryModal = ({ worker, onClose }) => {
         .from('leave_requests')
         .select('*')
         .eq('user_id', worker.id)
-        .order('start_date', { ascending: false });
+        .order('start_date', { ascending: false })
+        .limit(100);
       setRequests(data || []);
       setLoading(false);
     };
@@ -399,7 +400,8 @@ const EmployeeDirectory = () => {
       const { data: approvedReqs } = await supabase
         .from('leave_requests')
         .select('user_id, start_date, end_date')
-        .eq('status', 'approved');
+        .eq('status', 'approved')
+        .limit(1000);
 
       const usedDaysMap = (approvedReqs || []).reduce((acc, r) => {
         acc[r.user_id] = (acc[r.user_id] || 0) + getBusinessDays(r.start_date, r.end_date);

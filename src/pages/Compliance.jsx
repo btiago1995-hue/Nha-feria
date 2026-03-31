@@ -60,7 +60,8 @@ const Compliance = () => {
         supabase
           .from('leave_requests')
           .select('id, user_id, start_date, end_date, status, type, description, profiles!leave_requests_user_id_fkey(full_name, department, nif, cni, hire_date, job_title)')
-          .order('start_date', { ascending: true }),
+          .order('start_date', { ascending: true })
+          .limit(2000),
         supabase
           .from('audit_log')
           .select('*')

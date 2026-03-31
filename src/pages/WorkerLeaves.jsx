@@ -148,7 +148,8 @@ const WorkerLeaves = () => {
         .from('leave_requests')
         .select('*')
         .eq('user_id', profile.id)
-        .order('start_date', { ascending: false });
+        .order('start_date', { ascending: false })
+        .limit(100);
       if (error) throw error;
       setRequests(data || []);
     } catch (err) {

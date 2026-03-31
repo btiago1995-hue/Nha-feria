@@ -47,7 +47,8 @@ const ManagerCalendar = () => {
         .select('start_date, end_date, profiles!leave_requests_user_id_fkey(full_name, department, company_id)')
         .eq('status', 'approved')
         .eq('profiles.company_id', company?.id || '')
-        .order('start_date', { ascending: true });
+        .order('start_date', { ascending: true })
+        .limit(500);
 
       // Team size (scoped to this company)
       const { count } = await supabase

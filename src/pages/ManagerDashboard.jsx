@@ -61,7 +61,8 @@ const ManagerDashboard = () => {
         .from('leave_requests')
         .select('*, profiles!leave_requests_user_id_fkey(full_name)')
         .eq('status', 'pending')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
       if (reqError) throw reqError;
 
       const formattedRequests = (pendingReqs || []).map(r => ({
@@ -87,7 +88,8 @@ const ManagerDashboard = () => {
         .from('leave_requests')
         .select('start_date, end_date, type, description, profiles!leave_requests_user_id_fkey(full_name, department)')
         .eq('status', 'approved')
-        .order('start_date', { ascending: true });
+        .order('start_date', { ascending: true })
+        .limit(500);
       setApprovedReqs(approvedData || []);
 
       const grouped = (approvedData || []).reduce((acc, r) => {
@@ -103,7 +105,8 @@ const ManagerDashboard = () => {
       const { data: decidedReqs } = await supabase
         .from('leave_requests')
         .select('status')
-        .in('status', ['approved', 'rejected']);
+        .in('status', ['approved', 'rejected'])
+        .limit(1000);
       const approvedCount = (decidedReqs || []).filter(r => r.status === 'approved').length;
       const approvalRate = decidedReqs?.length > 0
         ? Math.round(approvedCount / decidedReqs.length * 100)
