@@ -385,7 +385,7 @@ const EmployeeDirectory = () => {
   const [team,          setTeam]          = useState([]);
   const [loading,       setLoading]       = useState(true);
 
-  useEffect(() => { fetchTeamData(); }, []);
+  useEffect(() => { if (company?.id) fetchTeamData(); }, [company?.id]);
 
   const fetchTeamData = async () => {
     setLoading(true);
