@@ -290,7 +290,7 @@ const LandingPage = () => {
               <a
                 key={l.label}
                 href={l.href}
-                className="text-sm text-text-muted hover:text-text transition-colors font-medium"
+                className="text-sm text-text-muted hover:text-text transition-colors font-medium py-3 flex items-center"
               >
                 {l.label}
               </a>
