@@ -293,24 +293,24 @@ const WorkerDashboard = () => {
             <button onClick={() => navigate('/worker-leaves', { state: { tab: 'history' } })} className="text-xs font-semibold text-primary-light hover:text-primary transition-colors cursor-pointer">{d('viewAll')}</button>
           </div>
           <div className="flex-1 overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-bg text-xs font-bold text-text-muted uppercase tracking-wider">
+            <table className="w-full text-left">
+              <thead className="bg-bg text-[10px] font-bold text-text-muted uppercase tracking-wider">
                 <tr>
-                  <th className="px-6 py-3">{d('period')}</th>
-                  <th className="px-5 py-3">{d('type')}</th>
-                  <th className="px-4 py-3 text-center">{d('days')}</th>
-                  <th className="px-6 py-3 text-right">{d('status')}</th>
+                  <th className="px-4 py-2.5">{d('period')}</th>
+                  <th className="px-2 py-2.5">{d('type')}</th>
+                  <th className="px-2 py-2.5 text-center">{d('days')}</th>
+                  <th className="px-4 py-2.5 text-right">{d('status')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {requests.length > 0 ? requests.map((item) => (
                   <tr key={item.id} className="hover:bg-bg/60 transition-colors">
-                    <td className="px-6 py-4 font-medium text-text text-sm">
-                      {format(parseISO(item.start_date), 'd MMM', { locale: dateLocale })} – {format(parseISO(item.end_date), 'd MMM yyyy', { locale: dateLocale })}
+                    <td className="px-4 py-3 font-medium text-text text-xs whitespace-nowrap">
+                      {format(parseISO(item.start_date), 'd MMM', { locale: dateLocale })} – {format(parseISO(item.end_date), 'd MMM', { locale: dateLocale })}
                     </td>
-                    <td className="px-5 py-4 text-text-muted capitalize text-sm">{item.type}</td>
-                    <td className="px-4 py-4 text-center font-semibold text-primary text-sm">{getBusinessDays(item.start_date, item.end_date)}</td>
-                    <td className="px-6 py-4 text-right">{getStatusBadge(item.status)}</td>
+                    <td className="px-2 py-3 text-text-muted capitalize text-xs">{item.type}</td>
+                    <td className="px-2 py-3 text-center font-semibold text-primary text-xs">{getBusinessDays(item.start_date, item.end_date)}</td>
+                    <td className="px-4 py-3 text-right">{getStatusBadge(item.status)}</td>
                   </tr>
                 )) : (
                   <tr>
