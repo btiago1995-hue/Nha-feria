@@ -55,7 +55,10 @@ const MainLayout = () => {
       if (error) throw error;
       setProfile(data);
     } catch (err) {
-      console.error('Error fetching profile:', err);
+      // Network errors (e.g. timeout, offline) are silent — don't pollute console
+      if (err?.code && err.code !== 'PGRST116') {
+        console.error('Error fetching profile:', err);
+      }
     } finally {
       setLoading(false);
     }
