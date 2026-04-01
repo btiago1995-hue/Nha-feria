@@ -80,6 +80,18 @@ serve(async (req) => {
       subject = `Bem-vindo à ${companyName} no Nha Féria 🌴`;
       html = emailWelcome({ workerName, companyName, dashboardUrl });
 
+    } else if (type === 'trial_ending') {
+      const { adminEmail, adminName, companyName, daysLeft, upgradeUrl } = payload;
+      to = adminEmail;
+      subject = `O trial de ${companyName} termina em ${daysLeft} dias`;
+      html = emailTrialEnding({ adminName, companyName, daysLeft, upgradeUrl });
+
+    } else if (type === 'trial_expired') {
+      const { adminEmail, adminName, companyName, upgradeUrl } = payload;
+      to = adminEmail;
+      subject = `O trial de ${companyName} terminou — subscreve para continuar`;
+      html = emailTrialExpired({ adminName, companyName, upgradeUrl });
+
     } else {
       return new Response(JSON.stringify({ error: 'Unknown email type' }), {
         status: 400,
@@ -209,6 +221,44 @@ function emailWelcome({ workerName, companyName, dashboardUrl }: Record<string, 
       </ul>
     </div>
     ${btn(dashboardUrl, 'Ir para o dashboard →')}
+  `);
+}
+
+function emailTrialEnding({ adminName, companyName, daysLeft, upgradeUrl }: Record<string, string>): string {
+  return base(`
+    <h2 style="margin:0 0 8px;font-size:20px;color:#1A3A5C;">O teu trial termina em ${daysLeft} dias ⏳</h2>
+    <p style="margin:0 0 20px;color:#64748B;font-size:14px;">Olá${adminName ? ` ${adminName.split(' ')[0]}` : ''},</p>
+    <p style="margin:0 0 16px;color:#475569;font-size:14px;line-height:1.6;">
+      O período de trial de <strong>${companyName}</strong> na Nha Féria termina em <strong>${daysLeft} ${daysLeft === '1' ? 'dia' : 'dias'}</strong>.
+      Para continuares a gerir férias e licenças sem interrupções, subscreve um plano agora.
+    </p>
+    <div style="border-radius:10px;background:#FFFBEB;border:1px solid #FCD34D;padding:16px 20px;margin-bottom:20px;">
+      <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#92400E;">O que acontece quando o trial termina:</p>
+      <ul style="margin:0;padding-left:16px;font-size:13px;color:#78350F;line-height:1.8;">
+        <li>Os dados ficam guardados em segurança</li>
+        <li>Não é possível criar novos pedidos de férias</li>
+        <li>Podes reativar em qualquer momento</li>
+      </ul>
+    </div>
+    ${btn(upgradeUrl, 'Subscrever agora →')}
+    <p style="margin:16px 0 0;font-size:12px;color:#94A3B8;">Pro: 3.200 CVE/mês · Enterprise: 10.900 CVE/mês</p>
+  `);
+}
+
+function emailTrialExpired({ adminName, companyName, upgradeUrl }: Record<string, string>): string {
+  return base(`
+    <h2 style="margin:0 0 8px;font-size:20px;color:#1A3A5C;">O trial de ${companyName} terminou</h2>
+    <p style="margin:0 0 20px;color:#64748B;font-size:14px;">Olá${adminName ? ` ${adminName.split(' ')[0]}` : ''},</p>
+    <p style="margin:0 0 16px;color:#475569;font-size:14px;line-height:1.6;">
+      O período de trial gratuito terminou. Os teus dados estão guardados e a equipa continua registada.
+      Para voltares a criar e aprovar pedidos de férias, subscreve um plano.
+    </p>
+    <div style="border-radius:10px;background:#FEF2F2;border:1px solid #FECACA;padding:16px 20px;margin-bottom:20px;">
+      <p style="margin:0;font-size:14px;font-weight:700;color:#991B1B;">A conta está suspensa.</p>
+      <p style="margin:6px 0 0;font-size:13px;color:#7F1D1D;">Subscreve para reativar em menos de 1 minuto.</p>
+    </div>
+    ${btn(upgradeUrl, 'Reativar conta →')}
+    <p style="margin:16px 0 0;font-size:12px;color:#94A3B8;">Pro: 3.200 CVE/mês · Enterprise: 10.900 CVE/mês · Starter: Grátis até 5 colaboradores</p>
   `);
 }
 
