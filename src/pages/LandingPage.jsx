@@ -120,11 +120,13 @@ const PLANS = [
   },
   {
     name: 'Pro',
-    price: '3.200$',
+    price: '3200',
     period: '/mês',
     desc: 'Para empresas em crescimento',
+    perExtra: true,
     features: [
-      'Até 50 colaboradores',
+      'Base: 15 colaboradores incluídos',
+      '+180 CVE por colaborador extra',
       'Relatórios de conformidade',
       'Notificações em tempo real',
       'Convites por link',
@@ -136,7 +138,7 @@ const PLANS = [
   },
   {
     name: 'Enterprise',
-    price: '10.900$',
+    price: '10900',
     period: '/mês',
     desc: 'Para grandes organizações',
     features: [
@@ -247,12 +249,12 @@ const ANNUAL_DISCOUNT = 0.10; // 10%
 
 const getPrice = (monthlyRaw, annual) => {
   if (monthlyRaw === 'Grátis') return { display: 'Grátis', period: 'para sempre' };
-  const monthly = parseInt(monthlyRaw.replace(/\D/g, ''), 10);
+  const monthly = parseInt(monthlyRaw, 10);
   if (annual) {
     const yearly = Math.round(monthly * 12 * (1 - ANNUAL_DISCOUNT));
-    return { display: `${yearly.toLocaleString('pt-CV')}$`, period: '/ano' };
+    return { display: yearly.toLocaleString('pt-CV'), period: 'CVE/ano' };
   }
-  return { display: monthlyRaw, period: '/mês' };
+  return { display: monthly.toLocaleString('pt-CV'), period: 'CVE/mês' };
 };
 
 const LandingPage = () => {
@@ -752,12 +754,20 @@ const LandingPage = () => {
                 {(() => {
                   const { display, period } = getPrice(p.price, annual);
                   return (
-                    <div className="flex items-baseline gap-1.5 mb-6">
-                      <span className={`text-4xl font-bold tracking-tight ${p.highlight ? 'text-white' : 'text-text'}`}>
-                        {display}
-                      </span>
-                      <span className={`text-sm ${p.highlight ? 'text-white/50' : 'text-text-muted'}`}>{period}</span>
-                    </div>
+                    <>
+                      <div className="flex items-baseline gap-1.5 mb-1">
+                        <span className={`text-4xl font-bold tracking-tight ${p.highlight ? 'text-white' : 'text-text'}`}>
+                          {display}
+                        </span>
+                        <span className={`text-sm ${p.highlight ? 'text-white/50' : 'text-text-muted'}`}>{period}</span>
+                      </div>
+                      {p.perExtra && (
+                        <p className={`text-[11px] mb-5 ${p.highlight ? 'text-white/40' : 'text-text-muted'}`}>
+                          Base 15 colaboradores · +180 CVE/extra
+                        </p>
+                      )}
+                      {!p.perExtra && <div className="mb-6" />}
+                    </>
                   );
                 })()}
 
