@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import * as Sentry from '@sentry/react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { supabase } from './lib/supabase';
 import Login from './pages/Login';
 import LandingPage from './pages/LandingPage';
 import InvitePage from './pages/InvitePage';
@@ -19,6 +20,27 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfUse from './pages/TermsOfUse';
 import ContactPage from './pages/ContactPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+
+// Redirects authenticated users straight to dashboard, skipping the landing page
+function RootRedirect() {
+  const [checking, setChecking] = useState(true);
+  const [destination, setDestination] = useState(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) { setDestination('landing'); setChecking(false); return; }
+      const { data: profile } = await supabase
+        .from('profiles').select('role').eq('id', session.user.id).single();
+      const role = profile?.role;
+      setDestination(role === 'manager' || role === 'admin' ? '/manager-dashboard' : '/worker-dashboard');
+      setChecking(false);
+    });
+  }, []);
+
+  if (checking) return null; // brief flash-free wait
+  if (destination === 'landing') return <LandingPage />;
+  return <Navigate to={destination} replace />;
+}
 
 function App() {
   return (
@@ -51,7 +73,7 @@ function App() {
         </Route>
 
         {/* Global Redirects */}
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<RootRedirect />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
