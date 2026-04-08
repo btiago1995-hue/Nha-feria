@@ -11,7 +11,7 @@ import { useCompany } from '../lib/CompanyContext';
 
 const ManagerCalendar = () => {
   const { t, lang } = useLanguage();
-  const { company } = useCompany() || {};
+  const { company, loading: companyLoading } = useCompany() || {};
   const m = (key, vars) => t('managerDashboard', key, vars);
   const dateLocale = lang === 'en' ? enGB : pt;
 
@@ -25,7 +25,14 @@ const ManagerCalendar = () => {
   const [deptFilter, setDeptFilter]   = useState(null);
   const filterRef = useRef(null);
 
-  useEffect(() => { if (company?.id) fetchData(); }, [company?.id]);
+  useEffect(() => {
+    if (company?.id) {
+      fetchData();
+    } else if (!companyLoading) {
+      // Company context finished loading but no company — stop spinner
+      setLoading(false);
+    }
+  }, [company?.id, companyLoading]);
 
   // Close filter dropdown on outside click
   useEffect(() => {
