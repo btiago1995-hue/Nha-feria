@@ -302,13 +302,13 @@ const LandingPage = () => {
           {/* Desktop CTAs */}
           <div className="hidden md:flex items-center gap-3">
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/login', { replace: true })}
               className="text-sm font-semibold text-text-muted hover:text-text transition-colors cursor-pointer"
             >
               Iniciar Sessão
             </button>
             <button
-              onClick={() => navigate('/login?signup=true')}
+              onClick={() => navigate('/login?signup=true', { replace: true })}
               className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-light transition-colors cursor-pointer active:scale-95 shadow-sm"
             >
               Começar Grátis
@@ -340,13 +340,13 @@ const LandingPage = () => {
             ))}
             <div className="pt-2 space-y-2">
               <button
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/login', { replace: true })}
                 className="w-full py-2.5 text-sm font-semibold text-text border border-border rounded-lg hover:bg-bg transition-colors cursor-pointer"
               >
                 Iniciar Sessão
               </button>
               <button
-                onClick={() => navigate('/login?signup=true')}
+                onClick={() => navigate('/login?signup=true', { replace: true })}
                 className="w-full py-2.5 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-light transition-colors cursor-pointer active:scale-95"
               >
                 Começar Grátis
@@ -391,7 +391,7 @@ const LandingPage = () => {
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12">
               <button
-                onClick={() => navigate('/login?signup=true')}
+                onClick={() => navigate('/login?signup=true', { replace: true })}
                 className="w-full sm:w-auto flex items-center justify-center gap-2 px-7 py-3.5 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary-light transition-colors shadow-lg cursor-pointer active:scale-95"
               >
                 Começar Grátis — Sem Cartão
@@ -785,7 +785,7 @@ const LandingPage = () => {
                     if (p.name === 'Enterprise') {
                       window.location.href = 'mailto:vendas@nhaferia.cv?subject=Plano%20Enterprise%20%E2%80%94%20Nha%20F%C3%A9ria';
                     } else {
-                      navigate('/login?signup=true');
+                      navigate('/login?signup=true', { replace: true });
                     }
                   }}
                   className={`w-full py-3 rounded-lg text-sm font-bold transition-all cursor-pointer active:scale-95 ${
@@ -854,7 +854,7 @@ const LandingPage = () => {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
-              onClick={() => navigate('/login?signup=true')}
+              onClick={() => navigate('/login?signup=true', { replace: true })}
               className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3.5 bg-accent text-primary text-sm font-bold rounded-lg hover:bg-accent-hover transition-colors shadow-lg cursor-pointer active:scale-95"
             >
               Começar Grátis Agora
