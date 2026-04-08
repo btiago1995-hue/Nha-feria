@@ -208,7 +208,7 @@ const WorkerDashboard = () => {
       </AnimatePresence>
 
       {/* Stats row */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <motion.div variants={itemVariants} className="hidden md:grid md:grid-cols-3 gap-4">
         <StatCard icon={<Sun className="w-5 h-5" />}          value={stats.available} label={d('availableDays')} color="blue" />
         <StatCard icon={<CheckCircle2 className="w-5 h-5" />} value={stats.used}      label={d('daysTaken')}    color="green" />
         <StatCard icon={<Clock className="w-5 h-5" />}        value={stats.pending}   label={d('pendingDays')}  color="yellow" />

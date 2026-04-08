@@ -29,7 +29,7 @@ const VacationBalanceCard = ({ profile, pendingDays = 0, usedDays = 0 }) => {
       <div className="relative z-10 flex items-end justify-between mb-6">
         <div>
           <div className="flex items-baseline gap-2">
-            <span className="text-6xl font-bold leading-none">{available}</span>
+            <span className="text-4xl md:text-6xl font-bold leading-none">{available}</span>
             <div>
               <div className="text-sm text-white/50 font-medium">/ {totalEntitlement}</div>
               <div className="text-xs text-white/40">dias úteis</div>
