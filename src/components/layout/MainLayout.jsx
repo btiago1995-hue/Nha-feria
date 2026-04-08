@@ -105,8 +105,8 @@ const MainLayout = () => {
     return 'Nha Féria';
   };
 
-  // Route guard: only managers can access /manager-dashboard
-  if (profile && location.pathname === '/manager-dashboard' && profile.role !== 'manager') {
+  // Route guard: only managers and admins can access /manager-dashboard
+  if (profile && location.pathname === '/manager-dashboard' && profile.role !== 'manager' && profile.role !== 'admin') {
     return <Navigate to="/worker-dashboard" replace />;
   }
 
