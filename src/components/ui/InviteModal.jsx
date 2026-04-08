@@ -40,7 +40,7 @@ const InviteModal = ({ isOpen, onClose, onAdd }) => {
       const { data: { user } } = await supabase.auth.getUser();
       const { data: inviterProfile } = await supabase
         .from('profiles')
-        .select('id, company_id, full_name')
+        .select('id, role, company_id, full_name')
         .eq('id', user.id)
         .single();
 
@@ -73,6 +73,8 @@ const InviteModal = ({ isOpen, onClose, onAdd }) => {
           tenure_months:    formData.tenureMonths,
           nif:              formData.nif.trim() || null,
           cni:              formData.cni.trim() || null,
+          // Se quem convida é manager, pré-atribui como gestor direto
+          manager_id:       inviterProfile?.role === 'manager' ? user.id : null,
         })
         .select('token')
         .single();

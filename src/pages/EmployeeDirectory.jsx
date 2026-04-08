@@ -45,12 +45,13 @@ const EDUCATION_LEVELS = ['Sem habilitação','Ensino Básico','Ensino Secundár
 const EMPLOYMENT_STATUSES = ['Permanente','Contrato a Prazo','Contrato de Trabalho Temporário','Prestação de Serviços','Estágio','Outro'];
 
 // ─── Edit Modal ──────────────────────────────────────────────────────────────
-const EditEmployeeModal = ({ worker, departments, onClose, onSaved }) => {
+const EditEmployeeModal = ({ worker, departments, managers, isAdmin, onClose, onSaved }) => {
   const [form, setForm]         = useState({
     full_name:            worker.name,
     department:           worker.department,
     role:                 worker.role,
     vacation_balance:     worker.balance,
+    manager_id:           worker.manager_id || '',
     nif:                  worker.nif || '',
     cni:                  worker.cni || '',
     job_title:            worker.job_title || '',
@@ -99,6 +100,7 @@ const EditEmployeeModal = ({ worker, departments, onClose, onSaved }) => {
         food_allowance:       form.food_allowance !== '' ? Number(form.food_allowance) : null,
         weekly_hours:         form.weekly_hours ? Number(form.weekly_hours) : 40,
         last_promotion_date:  form.last_promotion_date || null,
+        manager_id:           form.manager_id || null,
         updated_at:           new Date().toISOString(),
       })
       .eq('id', worker.id);
@@ -153,6 +155,16 @@ const EditEmployeeModal = ({ worker, departments, onClose, onSaved }) => {
                 <option value="admin">Administrador</option>
               </select>
             </Field>
+            {isAdmin && (
+              <Field label="Gestor Direto" span={2}>
+                <select className={inp} value={form.manager_id} onChange={e => set('manager_id', e.target.value)}>
+                  <option value="">— Sem gestor —</option>
+                  {(managers || []).filter(m => m.id !== worker.id).map(m => (
+                    <option key={m.id} value={m.id}>{m.full_name}</option>
+                  ))}
+                </select>
+              </Field>
+            )}
             <Field label="Saldo de Férias (dias)" span={2}>
               <input type="number" min="0" max="60" className={inp} value={form.vacation_balance} onChange={e => set('vacation_balance', e.target.value)} />
             </Field>
@@ -385,6 +397,18 @@ const EmployeeDirectory = () => {
   const [historyWorker, setHistoryWorker] = useState(null);
   const [team,          setTeam]          = useState([]);
   const [loading,       setLoading]       = useState(true);
+  const [myProfile,     setMyProfile]     = useState(null);
+  const [managers,      setManagers]      = useState([]);
+
+  useEffect(() => {
+    const loadMyProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from('profiles').select('id, role').eq('id', user.id).single();
+      setMyProfile(data);
+    };
+    loadMyProfile();
+  }, []);
 
   useEffect(() => { if (company?.id) fetchTeamData(); }, [company?.id]);
 
@@ -393,9 +417,13 @@ const EmployeeDirectory = () => {
     try {
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, full_name, role, department, vacation_balance, created_at, nif, cni, job_title, hire_date, island, gender, birth_date, inps_number, education_level, employment_status, base_salary, food_allowance, weekly_hours, last_promotion_date')
+        .select('id, full_name, role, department, vacation_balance, created_at, manager_id, nif, cni, job_title, hire_date, island, gender, birth_date, inps_number, education_level, employment_status, base_salary, food_allowance, weekly_hours, last_promotion_date')
         .eq('company_id', company?.id || '')
         .order('full_name', { ascending: true });
+
+      // Lista de managers/admins para o dropdown de "Gestor Direto"
+      const managerList = (profiles || []).filter(p => p.role === 'manager' || p.role === 'admin');
+      setManagers(managerList.map(m => ({ id: m.id, full_name: m.full_name })));
 
       const { data: approvedReqs } = await supabase
         .from('leave_requests')
@@ -425,6 +453,7 @@ const EmployeeDirectory = () => {
         balance:             p.vacation_balance || 22,
         used:                usedDaysMap[p.id] || 0,
         tenureMonths:        tenureMap[p.id] || 0,
+        manager_id:          p.manager_id || null,
         nif:                 p.nif || null,
         cni:                 p.cni || null,
         job_title:           p.job_title || null,
@@ -657,6 +686,8 @@ const EmployeeDirectory = () => {
           <EditEmployeeModal
             worker={editWorker}
             departments={departments}
+            managers={managers}
+            isAdmin={myProfile?.role === 'admin'}
             onClose={() => setEditWorker(null)}
             onSaved={fetchTeamData}
           />
