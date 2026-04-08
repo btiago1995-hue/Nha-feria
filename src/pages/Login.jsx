@@ -64,7 +64,7 @@ const Login = () => {
         .single();
 
       const role = profile?.role || 'employee';
-      navigate(role === 'manager' || role === 'admin' ? '/manager-dashboard' : '/worker-dashboard');
+      navigate(role === 'manager' || role === 'admin' ? '/manager-dashboard' : '/worker-dashboard', { replace: true });
     } catch {
       setError('Email ou palavra-passe incorretos.');
     } finally {
@@ -103,7 +103,7 @@ const Login = () => {
           p_nif: signupNif || null,
         });
         if (rpcError) throw rpcError;
-        navigate('/manager-dashboard');
+        navigate('/manager-dashboard', { replace: true });
       } else {
         // Email confirmation required — show success message
         setSignupDone(true);
@@ -128,7 +128,7 @@ const Login = () => {
 
           {/* Back to landing */}
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/', { replace: true })}
             className="flex items-center gap-1.5 text-xs font-semibold text-text-muted hover:text-primary transition-colors mb-8 group"
           >
             <ArrowLeft size={13} className="group-hover:-translate-x-0.5 transition-transform" />
