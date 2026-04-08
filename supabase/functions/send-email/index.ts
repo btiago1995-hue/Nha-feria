@@ -12,8 +12,10 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
-const RESEND_API_KEY  = Deno.env.get('RESEND_API_KEY')   ?? '';
-const WEBHOOK_SECRET  = Deno.env.get('WEBHOOK_SECRET')   ?? '';
+const RESEND_API_KEY  = Deno.env.get('RESEND_API_KEY')          ?? '';
+const WEBHOOK_SECRET  = Deno.env.get('WEBHOOK_SECRET')          ?? '';
+const SUPABASE_URL    = Deno.env.get('SUPABASE_URL')            ?? '';
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')    ?? '';
 const FROM = 'Nha Féria <noreply@nhaferia.cv>';
 
 const ALLOWED_ORIGINS = [
@@ -37,9 +39,20 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders(req) });
   }
 
-  // Verify webhook secret — this function is only called by internal DB triggers
+  // Accept either: WEBHOOK_SECRET (server-to-server) or a valid Supabase user JWT (client)
   const authHeader = req.headers.get('Authorization') ?? '';
-  if (!WEBHOOK_SECRET || authHeader !== `Bearer ${WEBHOOK_SECRET}`) {
+  const token = authHeader.replace('Bearer ', '');
+  const isWebhook = WEBHOOK_SECRET && token === WEBHOOK_SECRET;
+
+  let isUserSession = false;
+  if (!isWebhook && token && SUPABASE_URL && SUPABASE_ANON_KEY) {
+    const resp = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { Authorization: authHeader, apikey: SUPABASE_ANON_KEY },
+    });
+    isUserSession = resp.ok;
+  }
+
+  if (!isWebhook && !isUserSession) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { ...corsHeaders(req), 'Content-Type': 'application/json' },
