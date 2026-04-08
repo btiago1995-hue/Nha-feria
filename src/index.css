@@ -28,6 +28,7 @@
 @layer base {
   body {
     @apply bg-bg text-text font-sans antialiased selection:bg-primary-light/10 selection:text-primary-light;
+    overflow-x: hidden; /* prevent iOS Safari from zooming to fit overflowing decorative elements */
   }
 
   h1, h2, h3, h4, h5, h6 {
