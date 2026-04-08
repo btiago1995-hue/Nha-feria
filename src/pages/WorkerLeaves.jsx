@@ -385,27 +385,55 @@ const WorkerLeaves = () => {
       {/* History Tab */}
       {activeTab === 'history' && (
         <div className="bg-white rounded-radius border border-border shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-bg text-xs font-bold text-text-muted uppercase tracking-wider">
-                <tr>
-                  <th className="px-6 py-3">{w('period')}</th>
-                  <th className="px-5 py-3">{w('type')}</th>
-                  <th className="px-4 py-3 text-center">{w('days')}</th>
-                  <th className="px-5 py-3 text-center">{w('status')}</th>
-                  <th className="px-4 py-3" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {loadingHistory ? (
+          {loadingHistory ? (
+            <div className="px-6 py-12 text-center text-sm text-text-muted">
+              <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-2" />
+              {w('loading')}
+            </div>
+          ) : requests.length > 0 ? (<>
+            {/* Mobile: card list */}
+            <div className="divide-y divide-border sm:hidden">
+              {requests.map((item) => (
+                <div key={item.id} className="px-4 py-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-text">
+                      {format(parseISO(item.start_date), 'd MMM')} – {format(parseISO(item.end_date), 'd MMM yyyy')}
+                    </p>
+                    <p className="text-xs text-text-muted capitalize mt-0.5">
+                      {item.type} · <span className="font-semibold text-primary">{getBusinessDays(item.start_date, item.end_date)} dias</span>
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {getStatusBadge(item.status)}
+                    {item.status === 'pending' && (
+                      <button
+                        onClick={() => handleCancel(item.id)}
+                        disabled={cancelling === item.id}
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-danger transition-colors disabled:opacity-50 cursor-pointer"
+                      >
+                        {cancelling === item.id
+                          ? <span className="w-3.5 h-3.5 border border-slate-400 border-t-transparent rounded-full animate-spin" />
+                          : <XCircle size={14} />}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Desktop: table */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-bg text-xs font-bold text-text-muted uppercase tracking-wider">
                   <tr>
-                    <td colSpan="5" className="px-6 py-12 text-center text-sm text-text-muted">
-                      <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-2" />
-                      {w('loading')}
-                    </td>
+                    <th className="px-6 py-3">{w('period')}</th>
+                    <th className="px-5 py-3">{w('type')}</th>
+                    <th className="px-4 py-3 text-center">{w('days')}</th>
+                    <th className="px-5 py-3 text-center">{w('status')}</th>
+                    <th className="px-4 py-3" />
                   </tr>
-                ) : requests.length > 0 ? (
-                  requests.map((item) => (
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {requests.map((item) => (
                     <tr key={item.id} className="hover:bg-bg/60 transition-colors">
                       <td className="px-6 py-4 font-medium text-text">
                         {format(parseISO(item.start_date), 'd MMM')} – {format(parseISO(item.end_date), 'd MMM yyyy')}
@@ -420,7 +448,6 @@ const WorkerLeaves = () => {
                           <button
                             onClick={() => handleCancel(item.id)}
                             disabled={cancelling === item.id}
-                            title="Cancelar pedido"
                             className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-danger transition-colors disabled:opacity-50 cursor-pointer"
                           >
                             {cancelling === item.id
@@ -431,18 +458,16 @@ const WorkerLeaves = () => {
                         )}
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="5" className="px-6 py-16 text-center text-sm text-text-muted">
-                      <CalendarDays className="w-8 h-8 text-border mx-auto mb-2" />
-                      {w('noRequests')}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>) : (
+            <div className="px-6 py-16 text-center text-sm text-text-muted">
+              <CalendarDays className="w-8 h-8 text-border mx-auto mb-2" />
+              {w('noRequests')}
+            </div>
+          )}
         </div>
       )}
     </motion.div>
