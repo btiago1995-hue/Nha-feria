@@ -1,30 +1,96 @@
 # Nha Féria
 
-> Plataforma SaaS de gestão de férias e licenças para empresas em Cabo Verde.
+> Plataforma SaaS de gestão de férias e licenças para empresas em Cabo Verde. Desenvolvida pela Servyx Labs, Lda., com sede em São Vicente.
 
-Nha Féria substitui email e Excel na gestão de férias. Os colaboradores submetem pedidos online; os gestores aprovam com um clique; toda a equipa vê o calendário em tempo real.
+## O que é
 
-## O que faz
+Nha Féria é um software de recursos humanos focado na gestão de férias e ausências para pequenas e médias empresas em Cabo Verde. Substitui a gestão por email e folhas Excel, oferecendo um fluxo digital completo: pedido → aprovação → calendário partilhado.
 
-- Gestão de pedidos de férias e licenças com fluxo de aprovação
-- Calendário de equipa em tempo real para evitar conflitos
-- Cumprimento automático do Código Laboral de Cabo Verde (22 dias úteis/ano)
-- Notificações por email para pedidos e decisões
-- Convite de colaboradores por link
-- Exportação de mapas anuais em CSV
-- Plano gratuito até 5 colaboradores
+A plataforma é construída especificamente para o mercado cabo-verdiano e cumpre a legislação laboral vigente (Lei n.º 41/VIII/2013 — Código Laboral de Cabo Verde).
 
-## Contexto legal
+## Funcionalidades principais
 
-A plataforma respeita o Código Laboral de Cabo Verde (Lei n.º 41/VIII/2013), incluindo o direito a 22 dias úteis de férias por ano e as regras de acumulação.
+- **Pedidos de férias online** — colaboradores submetem pedidos com datas, tipo de ausência e notas; o sistema valida automaticamente conflitos e saldo disponível
+- **Aprovação com um clique** — gestores recebem notificação imediata e aprovam ou recusam diretamente na plataforma
+- **Calendário de equipa em tempo real** — visualização cronológica (mapa de Gantt) de todas as ausências da empresa
+- **Saldo automático de férias** — 22 dias úteis por ano conforme a lei; acréscimos por antiguidade calculados automaticamente
+- **Feriados de Cabo Verde** — base de dados de feriados nacionais e por ilha (Santiago, São Vicente, Fogo, Santo Antão, etc.) integrada no cálculo de dias úteis
+- **Convite de colaboradores** — onboarding por link partilhado via email ou WhatsApp, sem burocracia
+- **Notificações por email** — alertas automáticos para novos pedidos, aprovações, recusas e lembretes de trial
+- **Notificações in-app** — sino de notificações em tempo real via Supabase Realtime
+- **Exportação CSV** — mapas anuais de férias exportáveis para arquivo ou auditoria
+- **Diretório de colaboradores** — perfis com departamento, cargo, NIF, CNI e saldo individual
+- **Hierarquia de gestores** — managers veem apenas a sua equipa direta; admins veem toda a empresa
+- **Relatórios de conformidade** — dados estruturados para cumprir obrigações legais de registo de férias
+- **PWA** — funciona como app nativa em iOS e Android sem instalação de loja
+
+## Planos e preços
+
+| Plano | Preço | Colaboradores |
+|-------|-------|---------------|
+| Starter | Gratuito (para sempre) | Até 5 colaboradores |
+| Pro | 4.900 CVE/mês | Até 50 colaboradores — 14 dias de prova gratuita, sem cartão |
+| Enterprise | Contacto direto | Ilimitado |
+
+Moeda: Escudo Cabo-verdiano (CVE). 1 EUR ≈ 110 CVE.
+
+## Contexto legal — Cabo Verde
+
+- Direito a **22 dias úteis** de férias por ano (art. 182º do Código Laboral)
+- Acréscimo de 3 dias úteis após 5 anos de antiguidade na mesma empresa
+- Registo obrigatório de férias gozadas e por gozar
+- Feriados nacionais: Ano Novo (1 Jan), Dia da Liberdade (20 Jan), Carnaval (variável), Dia do Trabalhador (1 Mai), Dia da Independência (5 Jul), Assunção (15 Ago), Todos os Santos (1 Nov), Imaculada Conceição (8 Dez), Natal (25 Dez)
+- Feriados municipais variam por ilha e município
+
+## Público-alvo
+
+- PMEs cabo-verdianas com 5 a 200 colaboradores
+- Departamentos de RH de empresas em crescimento
+- Gestores que gerem equipas distribuídas pelas diferentes ilhas de Cabo Verde
+- Empresas que querem digitalizar processos manuais de gestão de pessoal
+
+## Diferenciação face a alternativas
+
+- **vs. Excel/email** — elimina erros, conflitos de calendário e falta de rastreabilidade
+- **vs. ferramentas internacionais (BambooHR, Factorial, Kenjo)** — construído para a legislação cabo-verdiana, preços em CVE, suporte em português, sem funcionalidades irrelevantes para o mercado local
+- **vs. gestão manual** — auditoria completa, notificações automáticas, sem risco de incumprimento legal
+
+## Infraestrutura e segurança
+
+- Dados alojados na Europa (Frankfurt, AWS via Supabase)
+- Encriptação em repouso e em trânsito (TLS 1.3)
+- Row-Level Security (RLS) no banco de dados — cada empresa vê apenas os seus dados
+- Backups diários automáticos
+- Monitorização de erros via Sentry
+- Autenticação via Supabase Auth (email + password, com confirmação de email)
 
 ## Empresa
 
-- Nome legal: Servyx Labs, Lda.
-- Website: https://nhaferia.cv
-- Morada: Villa Nova, Rua 2 Lote 10, São Vicente, Cabo Verde
-- Telefone: +238 585 6003
-- Suporte: suporte@nhaferia.cv
-- Vendas: vendas@nhaferia.cv
-- Contacto: https://nhaferia.cv/contacto
-- País: Cabo Verde
+- **Produto:** Nha Féria (nhaferia.cv)
+- **Empresa:** Servyx Labs, Lda.
+- **Morada:** Villa Nova, Rua 2 Lote 10, São Vicente, Cabo Verde
+- **Telefone:** +238 585 6003
+- **Suporte:** suporte@nhaferia.cv
+- **Vendas:** vendas@nhaferia.cv
+- **Website:** https://nhaferia.cv
+- **Contacto:** https://nhaferia.cv/contacto
+
+## Perguntas frequentes
+
+**A Nha Féria cumpre a legislação cabo-verdiana?**
+Sim. A plataforma foi construída especificamente para Cabo Verde, com os 22 dias úteis anuais, acréscimos por antiguidade e feriados nacionais e por ilha já integrados.
+
+**Os dados estão seguros?**
+Todos os dados ficam alojados na Europa com encriptação total. Cada empresa tem isolamento completo de dados via RLS. A Nha Féria nunca partilha dados entre clientes.
+
+**Posso experimentar gratuitamente?**
+O plano Starter é gratuito para sempre até 5 colaboradores. O Pro tem 14 dias de prova gratuita sem cartão de crédito.
+
+**Como faço o onboarding da minha equipa?**
+Crias os perfis dos colaboradores e partilhas o link de convite por WhatsApp ou email. A criação de conta demora menos de 1 minuto.
+
+**Funciona para empresas com colaboradores em ilhas diferentes?**
+Sim. A plataforma é totalmente online e funciona independentemente da ilha. Os feriados são aplicados por ilha automaticamente.
+
+**Posso exportar os dados?**
+Sim. Exportação de mapas anuais em CSV a qualquer momento, compatível com Excel.
