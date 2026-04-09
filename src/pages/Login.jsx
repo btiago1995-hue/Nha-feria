@@ -59,9 +59,15 @@ const Login = () => {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, company_id')
         .eq('id', data.user.id)
         .single();
+
+      // Founder confirmed email but setup_company_admin() was never called
+      if (!profile?.company_id) {
+        navigate('/setup-company', { replace: true });
+        return;
+      }
 
       const role = profile?.role || 'employee';
       navigate(role === 'manager' || role === 'admin' ? '/manager-dashboard' : '/worker-dashboard', { replace: true });

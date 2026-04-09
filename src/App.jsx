@@ -20,6 +20,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfUse from './pages/TermsOfUse';
 import ContactPage from './pages/ContactPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import SetupCompany from './pages/SetupCompany';
 
 // Redirects authenticated users straight to dashboard, skipping the landing page
 function RootRedirect() {
@@ -55,6 +56,7 @@ function App() {
         <Route path="/terms" element={<TermsOfUse />} />
         <Route path="/contacto" element={<ContactPage />} />
         <Route path="/payment/result" element={<PaymentResult />} />
+        <Route path="/setup-company" element={<SetupCompany />} />
 
         {/* Protected Routes */}
         <Route element={<MainLayout />}>
