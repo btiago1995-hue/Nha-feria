@@ -211,8 +211,29 @@ const DateRangePicker = ({ start, end, onChange, holidays = [], existingRequests
           </p>
         )}
       </div>
+
+      {/* Legend */}
+      <div className="mt-4 pt-3 border-t border-border flex flex-wrap gap-x-4 gap-y-1.5">
+        <LegendItem color="bg-orange-400" label="Feriado" />
+        <LegendItem color="bg-emerald-400" label="Férias aprovadas" dot="corner" />
+        <LegendItem color="bg-amber-400" label="Pedido pendente" dot="corner" />
+        <LegendItem color="bg-primary" label="Hoje" dot="bottom" />
+      </div>
     </div>
   );
 };
+
+const LegendItem = ({ color, label, dot }) => (
+  <div className="flex items-center gap-1.5">
+    <span className="relative w-4 h-4 flex items-center justify-center flex-shrink-0">
+      {dot === 'corner'
+        ? <span className={`absolute top-0 right-0 w-2 h-2 rounded-full ${color}`} />
+        : dot === 'bottom'
+        ? <span className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-2 h-0.5 rounded-full ${color}`} />
+        : <span className={`w-2 h-2 rounded-full ${color}`} />}
+    </span>
+    <span className="text-[11px] text-text-muted">{label}</span>
+  </div>
+);
 
 export default DateRangePicker;

@@ -21,6 +21,7 @@ import TermsOfUse from './pages/TermsOfUse';
 import ContactPage from './pages/ContactPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import SetupCompany from './pages/SetupCompany';
+import ManagerRequests from './pages/ManagerRequests';
 
 // Redirects authenticated users straight to dashboard, skipping the landing page
 function RootRedirect() {
@@ -65,6 +66,7 @@ function App() {
           <Route path="/worker-leaves" element={<WorkerLeaves />} />
           <Route path="/team" element={<EmployeeDirectory />} />
           <Route path="/manager-calendar" element={<ManagerCalendar />} />
+          <Route path="/manager-requests" element={<ManagerRequests />} />
           <Route path="/compliance" element={<Compliance />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/settings" element={<SettingsPage />} />

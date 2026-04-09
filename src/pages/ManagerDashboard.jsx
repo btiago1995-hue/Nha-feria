@@ -435,7 +435,7 @@ const ManagerDashboard = () => {
               )}
             </div>
             <button
-              onClick={() => navigate('/manager-calendar')}
+              onClick={() => navigate('/manager-requests')}
               className="text-xs font-semibold text-primary-light hover:text-primary transition-colors cursor-pointer"
             >
               {m('viewAll')}
