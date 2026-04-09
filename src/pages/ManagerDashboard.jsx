@@ -5,7 +5,6 @@ import {
   CheckCircle2, X, TrendingUp, UserPlus, ArrowRight,
 } from 'lucide-react';
 import SumCard from '../components/ui/SumCard';
-import ApprovalList from '../components/ui/ApprovalList';
 import GanttChart from '../components/ui/GanttChart';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -38,6 +37,8 @@ const ManagerDashboard = () => {
   const [deptFilter, setDeptFilter]     = useState('');
   const [loading, setLoading]           = useState(true);
   const [toast, setToast]               = useState(null);
+  const [selectedIds, setSelectedIds]   = useState(new Set());
+  const [bulkLoading, setBulkLoading]   = useState(false);
   const [stats, setStats] = useState({
     pendingCount: 0,
     offToday: 0,
@@ -56,13 +57,32 @@ const ManagerDashboard = () => {
 
   const fetchManagerData = async () => {
     setLoading(true);
+    setSelectedIds(new Set());
     try {
-      const { data: pendingReqs, error: reqError } = await supabase
+      // Hierarchy filter: managers see only their team's requests
+      let teamMemberIds = null;
+      if (profile?.role === 'manager') {
+        const { data: teamMembers } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('manager_id', profile.id);
+        teamMemberIds = (teamMembers || []).map(p => p.id);
+      }
+
+      let pendingQuery = supabase
         .from('leave_requests')
         .select('*, profiles!leave_requests_user_id_fkey(full_name)')
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
         .limit(100);
+
+      if (teamMemberIds !== null) {
+        pendingQuery = teamMemberIds.length > 0
+          ? pendingQuery.in('user_id', teamMemberIds)
+          : pendingQuery.in('user_id', ['00000000-0000-0000-0000-000000000000']); // empty
+      }
+
+      const { data: pendingReqs, error: reqError } = await pendingQuery;
       if (reqError) throw reqError;
 
       const formattedRequests = (pendingReqs || []).map(r => ({
@@ -171,6 +191,41 @@ const ManagerDashboard = () => {
       notifyWorker(data[0], 'approved');
     } catch {
       showToast(m('approveError'), 'error');
+    }
+  };
+
+  const toggleSelect = (id) => setSelectedIds(prev => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === requests.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(requests.map(r => r.id)));
+    }
+  };
+
+  const handleBulkAction = async (status) => {
+    if (selectedIds.size === 0) return;
+    setBulkLoading(true);
+    try {
+      const ids = [...selectedIds];
+      const { data, error } = await supabase
+        .from('leave_requests')
+        .update({ status, approved_by: profile.id })
+        .in('id', ids)
+        .select();
+      if (error) throw error;
+      (data || []).forEach(r => notifyWorker(r, status));
+      showToast(status === 'approved' ? m('approveSuccess') : m('rejectSuccess'));
+      fetchManagerData();
+    } catch {
+      showToast(status === 'approved' ? m('approveError') : m('rejectError'), 'error');
+    } finally {
+      setBulkLoading(false);
     }
   };
 
@@ -387,7 +442,74 @@ const ManagerDashboard = () => {
             </button>
           </div>
           <div className="p-5 flex-1">
-            <ApprovalList requests={requests} onApprove={handleApprove} onReject={handleReject} />
+            {/* Bulk action bar */}
+            {requests.length > 0 && (
+              <div className="flex items-center gap-3 mb-3">
+                <label className="flex items-center gap-2 text-xs font-semibold text-text-muted cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.size === requests.length && requests.length > 0}
+                    onChange={toggleSelectAll}
+                    className="w-3.5 h-3.5 accent-primary cursor-pointer"
+                  />
+                  {selectedIds.size > 0 ? `${selectedIds.size} seleccionado(s)` : 'Seleccionar todos'}
+                </label>
+                {selectedIds.size > 0 && (
+                  <div className="flex gap-2 ml-auto">
+                    <button
+                      onClick={() => handleBulkAction('approved')}
+                      disabled={bulkLoading}
+                      className="flex items-center gap-1 px-3 py-1 bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-bold rounded-md transition-colors disabled:opacity-50 cursor-pointer"
+                    >
+                      <CheckCircle2 size={12} /> Aprovar
+                    </button>
+                    <button
+                      onClick={() => handleBulkAction('rejected')}
+                      disabled={bulkLoading}
+                      className="flex items-center gap-1 px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-[11px] font-bold rounded-md transition-colors disabled:opacity-50 cursor-pointer"
+                    >
+                      <X size={12} /> Rejeitar
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Request list with selection */}
+            {requests.length === 0 ? (
+              <div className="py-8 text-center text-xs text-text-muted flex flex-col items-center gap-2 bg-bg/30 border border-dashed border-border rounded-radius-sm">
+                <CheckCircle2 size={18} className="text-emerald-400" />
+                {m('noPending')}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {requests.map(r => (
+                  <div key={r.id} className={`flex items-center gap-3 p-3 rounded-radius-sm border transition-colors ${selectedIds.has(r.id) ? 'bg-primary/5 border-primary/20' : 'bg-bg border-transparent hover:bg-slate-50'}`}>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(r.id)}
+                      onChange={() => toggleSelect(r.id)}
+                      className="w-3.5 h-3.5 accent-primary flex-shrink-0 cursor-pointer"
+                    />
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary-light flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0">
+                      {r.avatar}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-text truncate">{r.workerName}</p>
+                      <p className="text-[10px] text-text-muted">{r.startDate} → {r.endDate} · {r.days}d úteis</p>
+                    </div>
+                    <div className="flex gap-1.5 flex-shrink-0">
+                      <button onClick={() => handleApprove(r.id)} className="p-1.5 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-colors cursor-pointer" title="Aprovar">
+                        <CheckCircle2 size={14} />
+                      </button>
+                      <button onClick={() => handleReject(r.id)} className="p-1.5 rounded-md bg-red-50 hover:bg-red-100 text-red-500 transition-colors cursor-pointer" title="Rejeitar">
+                        <X size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {stats.accumAlerts.length > 0 && (
               <div className="mt-4 space-y-2">
