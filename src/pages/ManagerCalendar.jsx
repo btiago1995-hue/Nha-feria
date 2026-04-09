@@ -141,7 +141,7 @@ const ManagerCalendar = () => {
           <h2 className="text-2xl font-bold text-text text-gradient">{m('globalLeaveMap')}</h2>
           <p className="text-sm text-text-muted">Visualização cronológica das ausências de toda a organização.</p>
         </div>
-        <div className="flex gap-2 relative" ref={filterRef}>
+        <div className="flex flex-wrap gap-2 relative" ref={filterRef}>
           <button
             onClick={() => setShowFilters(v => !v)}
             className={`flex items-center gap-2 px-4 py-2 border rounded-radius-sm text-sm font-semibold transition-colors cursor-pointer ${

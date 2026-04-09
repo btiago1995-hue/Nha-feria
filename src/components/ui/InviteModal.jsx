@@ -3,6 +3,7 @@ import { X, CheckCircle2, MessageSquare, Mail, Copy, Check, Hash, CreditCard } f
 import { useCompany } from '../../lib/CompanyContext';
 import { supabase } from '../../lib/supabase';
 import { sendEmail } from '../../utils/sendEmail';
+import { validateNIF } from '../../utils/nifValidation';
 
 const PLAN_LIMITS = { starter: 5, pro: 50, enterprise: Infinity };
 
@@ -31,6 +32,10 @@ const InviteModal = ({ isOpen, onClose, onAdd }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (submittingRef.current) return;
+    if (!validateNIF(formData.nif)) {
+      setError('NIF do colaborador deve ter exactamente 9 dígitos');
+      return;
+    }
     submittingRef.current = true;
     setError('');
     setStep('loading');

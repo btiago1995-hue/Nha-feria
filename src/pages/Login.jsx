@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LogIn, Lock, Mail, Eye, EyeOff, User, Building2, ArrowLeft, Hash } from 'lucide-react';
+import { validateNIF } from '../utils/nifValidation';
 
 const Login = () => {
   const [searchParams] = useSearchParams();
@@ -24,6 +25,7 @@ const Login = () => {
   const [showSignupPass, setShowSignupPass] = useState(false);
   const [signupDone, setSignupDone]         = useState(false);
   const [tosAccepted, setTosAccepted]       = useState(false);
+  const [nifError, setNifError]             = useState('');
 
   const [loading, setLoading]   = useState(false);
   const [error, setError]       = useState(null);
@@ -92,6 +94,11 @@ const Login = () => {
       return;
     }
 
+    if (!validateNIF(signupNif)) {
+      setNifError('NIF deve ter exactamente 9 dígitos');
+      return;
+    }
+    setNifError('');
     setLoading(true);
     try {
       const { data, error: signUpError } = await supabase.auth.signUp({
@@ -129,7 +136,7 @@ const Login = () => {
   return (
     <div className="min-h-screen flex bg-bg font-sans">
       {/* Left side — Form */}
-      <div className="flex-1 flex items-center justify-center p-6 md:p-10">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-10">
         <div className="w-full max-w-[440px]">
 
           {/* Back to landing */}
@@ -346,6 +353,7 @@ const Login = () => {
                       />
                       <Hash className="absolute left-3 top-3.5 w-4 h-4 text-text-light" />
                     </div>
+                    {nifError && <p className="text-[11px] text-red-600 font-semibold mt-1">{nifError}</p>}
                   </div>
 
                   <div className="space-y-1.5">
