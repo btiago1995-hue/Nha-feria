@@ -9,3 +9,6 @@ tmp-vite/
 prototype-ui/
 skills-lock.json
 .vercel
+.DS_Store
+**/.DS_Store
+.context/
