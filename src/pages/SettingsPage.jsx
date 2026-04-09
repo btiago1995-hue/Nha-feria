@@ -213,13 +213,17 @@ const SettingsPage = () => {
   const [notifPedidos,  setNotifPedidos]  = useState(() => profile?.notify_on_leave_submitted ?? (localStorage.getItem('nha_feria_notif_pedidos')  !== 'false'));
   const [notifAprov,    setNotifAprov]    = useState(() => profile?.notify_on_leave_decided   ?? (localStorage.getItem('nha_feria_notif_aprov')    !== 'false'));
   const [notifLembrete, setNotifLembrete] = useState(() => localStorage.getItem('nha_feria_notif_lembrete') === 'true');
+  const [notifConvite,  setNotifConvite]  = useState(() => profile?.notify_on_invite ?? true);
+  const [notifSaved,    setNotifSaved]    = useState(false);
 
   const persist = (dbCol, key, setter) => async (val) => {
     setter(val);
-    localStorage.setItem(key, String(val));
+    if (key) localStorage.setItem(key, String(val));
     if (session?.user?.id && dbCol) {
       await supabase.from('profiles').update({ [dbCol]: val }).eq('id', session.user.id);
     }
+    setNotifSaved(true);
+    setTimeout(() => setNotifSaved(false), 2000);
   };
   const [resetSent,     setResetSent]     = useState(false);
   const [resetLoading,  setResetLoading]  = useState(false);
@@ -263,9 +267,10 @@ const SettingsPage = () => {
         </div>
         <div className="divide-y divide-border">
           {[
-            { label: s('newPending'),     sub: s('newPendingDesc'),     val: notifPedidos,  set: persist('notify_on_leave_submitted', 'nha_feria_notif_pedidos',  setNotifPedidos)  },
-            { label: s('approvalStatus'), sub: s('approvalStatusDesc'), val: notifAprov,    set: persist('notify_on_leave_decided',   'nha_feria_notif_aprov',    setNotifAprov)    },
-            { label: s('balanceReminder'), sub: s('balanceReminderDesc'), val: notifLembrete, set: persist(null,                      'nha_feria_notif_lembrete', setNotifLembrete) },
+            { label: s('newPending'),      sub: s('newPendingDesc'),      val: notifPedidos,  set: persist('notify_on_leave_submitted', 'nha_feria_notif_pedidos',  setNotifPedidos)  },
+            { label: s('approvalStatus'),  sub: s('approvalStatusDesc'),  val: notifAprov,    set: persist('notify_on_leave_decided',   'nha_feria_notif_aprov',    setNotifAprov)    },
+            { label: s('balanceReminder'), sub: s('balanceReminderDesc'), val: notifLembrete, set: persist(null,                       'nha_feria_notif_lembrete', setNotifLembrete) },
+            { label: 'Emails de convite',  sub: 'Receber email quando alguém me convida para uma empresa.',  val: notifConvite,  set: persist('notify_on_invite', null, setNotifConvite) },
           ].map((item, i) => (
             <div key={i} className="flex items-center justify-between gap-4 px-6 py-4">
               <div className="min-w-0">
@@ -275,6 +280,18 @@ const SettingsPage = () => {
               <Toggle checked={item.val} onChange={item.set} />
             </div>
           ))}
+          <AnimatePresence>
+            {notifSaved && (
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center gap-2 px-6 py-3 bg-emerald-50 border-t border-emerald-100 text-xs font-semibold text-emerald-700"
+              >
+                <Check size={13} /> Preferências guardadas
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
