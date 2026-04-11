@@ -77,6 +77,7 @@ const ManagerRequests = () => {
       setAllRequests(data || []);
     } catch (err) {
       console.error('Error fetching requests:', err);
+      showToast('Erro ao carregar pedidos. Verifica a tua ligação e tenta novamente.', 'error');
     } finally {
       setLoading(false);
     }

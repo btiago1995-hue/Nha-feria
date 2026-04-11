@@ -116,7 +116,7 @@ const EditEmployeeModal = ({ worker, departments, managers, isAdmin, onClose, on
     setDeleting(true);
     const { error: err } = await supabase.rpc('gdpr_delete_user', { p_target_user_id: worker.id });
     setDeleting(false);
-    if (err) { setError('Erro ao apagar: ' + err.message); setShowDel(false); return; }
+    if (err) { setError('Não foi possível apagar o colaborador. Tenta novamente ou contacta o suporte.'); setShowDel(false); return; }
     onSaved();
     onClose();
   };

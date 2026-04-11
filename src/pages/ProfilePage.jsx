@@ -34,17 +34,20 @@ const ProfilePage = () => {
   const [nifEditing, setNifEditing]     = useState(false);
   const [nifSaving, setNifSaving]       = useState(false);
   const [nifSaved, setNifSaved]         = useState(false);
+  const [nifError, setNifError]         = useState(null);
 
   const handleSaveNif = async (e) => {
     e.preventDefault();
     setNifSaving(true);
     setNifSaved(false);
+    setNifError(null);
     try {
       await supabase.from('profiles').update({ nif: nif.trim() || null }).eq('id', profile.id);
       setNifSaved(true);
       setTimeout(() => { setNifSaved(false); setNifEditing(false); }, 800);
     } catch (err) {
       console.error('NIF save error:', err);
+      setNifError('Não foi possível guardar o NIF. Tenta novamente.');
     } finally {
       setNifSaving(false);
     }
@@ -53,6 +56,7 @@ const ProfilePage = () => {
   const [dgtEditing, setDgtEditing]   = useState(false);
   const [dgtSaving, setDgtSaving]     = useState(false);
   const [dgtSaved, setDgtSaved]       = useState(false);
+  const [dgtError, setDgtError]       = useState(null);
   const [cni, setCni]                 = useState(profile?.cni || '');
   const [hireDate, setHireDate]       = useState(profile?.hire_date || '');
   const [jobTitle, setJobTitle]       = useState(profile?.job_title || '');
@@ -61,6 +65,7 @@ const ProfilePage = () => {
     e.preventDefault();
     setDgtSaving(true);
     setDgtSaved(false);
+    setDgtError(null);
     try {
       await supabase.from('profiles').update({
         cni:       cni.trim()      || null,
@@ -71,6 +76,7 @@ const ProfilePage = () => {
       setTimeout(() => { setDgtSaved(false); setDgtEditing(false); }, 800);
     } catch (err) {
       console.error('DGT fields save error:', err);
+      setDgtError('Não foi possível guardar os dados. Tenta novamente.');
     } finally {
       setDgtSaving(false);
     }
@@ -79,12 +85,14 @@ const ProfilePage = () => {
   const [island, setIsland]             = useState(profile?.island || '');
   const [islandSaving, setIslandSaving]   = useState(false);
   const [islandSaved, setIslandSaved]     = useState(false);
+  const [islandError, setIslandError]     = useState(null);
   const [islandOpen, setIslandOpen]       = useState(() => !profile?.island);
 
   const handleSaveIsland = async (val) => {
     setIsland(val);
     setIslandSaving(true);
     setIslandSaved(false);
+    setIslandError(null);
     try {
       await supabase.from('profiles').update({ island: val }).eq('id', profile.id);
       setIslandSaved(true);
@@ -94,6 +102,7 @@ const ProfilePage = () => {
       }, 800);
     } catch (err) {
       console.error('Island save error:', err);
+      setIslandError('Não foi possível guardar a ilha. Tenta novamente.');
     } finally {
       setIslandSaving(false);
     }
@@ -267,6 +276,7 @@ const ProfilePage = () => {
                   value={nif}
                   onChange={e => setNif(e.target.value)}
                 />
+                {nifError && <p className="text-xs text-red-600">{nifError}</p>}
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
@@ -329,6 +339,7 @@ const ProfilePage = () => {
             >
               <form onSubmit={handleSaveDgt} className="px-6 pb-5 pt-3 border-t border-border space-y-4">
                 <p className="text-xs text-text-muted">Necessário para o Mapa Anual de Férias enviado à DGT (prazo: 30 de Abril).</p>
+                {dgtError && <p className="text-xs text-red-600">{dgtError}</p>}
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-text uppercase tracking-wider flex items-center gap-1.5">
@@ -427,6 +438,7 @@ const ProfilePage = () => {
             >
               <div className="px-4 pb-4 pt-1 border-t border-border">
                 <p className="text-xs text-text-muted mb-3 pt-2">Usada para mostrar os feriados locais da tua ilha.</p>
+                {islandError && <p className="text-xs text-red-600 mb-2">{islandError}</p>}
                 <div className="grid grid-cols-3 gap-2">
                   {CV_ISLANDS.map(isl => (
                     <button
