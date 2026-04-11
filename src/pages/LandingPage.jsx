@@ -174,6 +174,14 @@ const FAQS = [
     q: 'Posso exportar os dados?',
     a: 'Sim. Podes exportar mapas anuais de férias em CSV a qualquer momento, para arquivo ou auditoria interna.',
   },
+  {
+    q: 'Funciona para empresas com colaboradores em ilhas diferentes?',
+    a: 'Sim. A plataforma é totalmente online e funciona independentemente da ilha. Os feriados municipais são aplicados automaticamente por ilha (Santiago, São Vicente, Fogo, Santo Antão, Sal, Boavista, etc.).',
+  },
+  {
+    q: 'Qual é a diferença entre o plano Starter e o plano Pro?',
+    a: 'O plano Starter é gratuito para sempre e suporta até 5 colaboradores. O plano Pro começa em 3.200 CVE/mês (inclui 15 colaboradores, mais 180 CVE por colaborador extra), com todas as funcionalidades desbloqueadas e 14 dias de prova gratuita sem cartão.',
+  },
 ];
 
 // ─── Mini Dashboard Mockup ─────────────────────────────────────────────────────
