@@ -29,7 +29,7 @@ A plataforma é construída especificamente para o mercado cabo-verdiano e cumpr
 | Plano | Preço | Colaboradores |
 |-------|-------|---------------|
 | Starter | Gratuito (para sempre) | Até 5 colaboradores |
-| Pro | 4.900 CVE/mês | Até 50 colaboradores — 14 dias de prova gratuita, sem cartão |
+| Pro | 3.200 CVE/mês (base 15 colaboradores, +180 CVE/colaborador extra) | Até 50 colaboradores — 14 dias de prova gratuita, sem cartão |
 | Enterprise | Contacto direto | Ilimitado |
 
 Moeda: Escudo Cabo-verdiano (CVE). 1 EUR ≈ 110 CVE.
