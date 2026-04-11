@@ -19,6 +19,18 @@ React + Vite + Supabase + Tailwind v4. Leave/vacation management app for Cape Ve
 - When adding a conditional (if/else, switch), write tests for BOTH paths
 - Never commit code that makes existing tests fail
 
+## Obsidian Memory
+
+The Obsidian vault at `/Users/tiago/Documents/Meu 2 Cerebro/Nha Féria/` is the expanded memory for this project.
+
+At the start of each session, check:
+1. `/Users/tiago/Documents/Meu 2 Cerebro/Nha Féria/context/` — read any `.md` files here before starting work (specs, ideas, client feedback left by the user)
+2. `/Users/tiago/Documents/Meu 2 Cerebro/Nha Féria/sessions/` — read the most recent session file to recover context
+
+At the end of significant sessions (features shipped, bugs fixed, decisions made), write a session note to `/Users/tiago/Documents/Meu 2 Cerebro/Nha Féria/sessions/YYYY-MM-DD.md` with: what was done, decisions taken, next steps.
+
+When saving persistent memory, mirror it to `/Users/tiago/Documents/Meu 2 Cerebro/Nha Féria/memory/` in addition to `~/.claude/projects/-Users-tiago-Nha-Feria/memory/`.
+
 ## Skill routing
 
 When the user's request matches an available skill, ALWAYS invoke it using the Skill
