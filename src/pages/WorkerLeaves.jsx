@@ -139,10 +139,12 @@ const WorkerLeaves = () => {
   // ── History state ────────────────────────────────────────
   const [requests, setRequests] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState(null);
 
   const fetchRequests = async () => {
     if (!profile) return;
     setLoadingHistory(true);
+    setHistoryError(null);
     try {
       const { data, error } = await supabase
         .from('leave_requests')
@@ -154,6 +156,7 @@ const WorkerLeaves = () => {
       setRequests(data || []);
     } catch (err) {
       console.error('Error fetching requests:', err);
+      setHistoryError('Erro ao carregar pedidos. Verifica a tua ligação e tenta novamente.');
     } finally {
       setLoadingHistory(false);
     }
@@ -389,6 +392,17 @@ const WorkerLeaves = () => {
             <div className="px-6 py-12 text-center text-sm text-text-muted">
               <div className="w-5 h-5 border-2 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-2" />
               {w('loading')}
+            </div>
+          ) : historyError ? (
+            <div className="px-6 py-12 text-center">
+              <AlertCircle className="w-7 h-7 text-red-400 mx-auto mb-2" />
+              <p className="text-sm text-red-600 font-semibold mb-3">{historyError}</p>
+              <button
+                onClick={fetchRequests}
+                className="text-xs font-semibold text-primary hover:underline cursor-pointer"
+              >
+                Tentar novamente
+              </button>
             </div>
           ) : requests.length > 0 ? (<>
             {/* Mobile: card list */}
