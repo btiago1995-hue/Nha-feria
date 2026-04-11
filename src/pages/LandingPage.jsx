@@ -271,7 +271,7 @@ const LandingPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white text-text font-sans">
+    <main className="min-h-screen bg-white text-text font-sans">
 
       {/* ── NAVBAR ────────────────────────────────────────────────────────── */}
       <nav className={`sticky top-0 z-50 transition-all duration-200 ${scrolled ? 'bg-white shadow-sm border-b border-border' : 'bg-white/95 backdrop-blur-sm'}`}>
@@ -379,7 +379,7 @@ const LandingPage = () => {
                 <span className="relative z-10">emails e Excel</span>
                 <span className="absolute bottom-1 left-0 right-0 h-3 bg-accent/20 -z-0 rounded" />
               </span>
-              {' '}para gerir férias
+              {' '}para gerir férias em Cabo Verde
             </h1>
 
             {/* Subheading */}
@@ -940,7 +940,7 @@ const LandingPage = () => {
           </div>
         </div>
       </footer>
-    </div>
+    </main>
   );
 };
 

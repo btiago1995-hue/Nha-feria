@@ -1,4 +1,23 @@
 User-agent: *
 Allow: /
 
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+# Training-only scrapers sem reciprocidade
+User-agent: CCBot
+Disallow: /
+
 Sitemap: https://nhaferia.cv/sitemap.xml
