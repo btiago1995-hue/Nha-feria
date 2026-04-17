@@ -22,6 +22,7 @@ const NAV_LINKS = [
   { label: 'Como Funciona',   href: '#como-funciona'   },
   { label: 'Preços',          href: '#precos'           },
   { label: 'FAQ',             href: '#faq'              },
+  { label: 'Sobre',           href: '#sobre'             },
 ];
 
 const STATS = [
@@ -843,6 +844,38 @@ const LandingPage = () => {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── SOBRE ─────────────────────────────────────────────────────── */}
+      <section id="sobre" className="bg-bg py-20">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+          <h2 className="text-2xl font-bold text-text mb-6">Sobre a Nha Féria</h2>
+          <div className="prose prose-slate max-w-none text-text-muted leading-relaxed space-y-4 text-[15px]">
+            <p>
+              A <strong className="text-text">Nha Féria</strong> é uma plataforma SaaS de gestão de férias e licenças
+              desenvolvida pela <strong className="text-text">Servyx Labs, Lda.</strong>, empresa cabo-verdiana de
+              tecnologia sediada em São Vicente, Cabo Verde.
+            </p>
+            <p>
+              A plataforma nasceu da necessidade real das PMEs cabo-verdianas de digitalizar a gestão de ausências —
+              substituindo o caos do email e do Excel por um fluxo estruturado, auditável e conforme com o
+              Código Laboral de Cabo Verde (Lei n.º 41/VIII/2013). Cada funcionalidade foi desenhada para o contexto
+              local: 22 dias úteis de férias por lei, feriados por ilha, preços em escudos cabo-verdianos e suporte
+              em português.
+            </p>
+            <p>
+              Hoje, a Nha Féria serve pequenas e médias empresas em todo o arquipélago — de São Vicente a Santiago,
+              do Sal ao Fogo — permitindo que gestores e colaboradores tratem de férias em segundos,
+              independentemente da ilha onde estejam.
+            </p>
+          </div>
+          <div className="mt-8 flex flex-wrap gap-x-8 gap-y-3 text-sm text-text-muted">
+            <span><strong className="text-text">Empresa:</strong> Servyx Labs, Lda.</span>
+            <span><strong className="text-text">Sede:</strong> São Vicente, Cabo Verde</span>
+            <span><strong className="text-text">Suporte:</strong> suporte@nhaferia.cv</span>
+            <span><strong className="text-text">Vendas:</strong> vendas@nhaferia.cv</span>
           </div>
         </div>
       </section>
