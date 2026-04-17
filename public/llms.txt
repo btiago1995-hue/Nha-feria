@@ -64,6 +64,49 @@ Moeda: Escudo Cabo-verdiano (CVE). 1 EUR ≈ 110 CVE.
 - Monitorização de erros via Sentry
 - Autenticação via Supabase Auth (email + password, com confirmação de email)
 
+## Cobertura geográfica por ilha
+
+A Nha Féria serve empresas em todas as ilhas habitadas de Cabo Verde:
+
+### Santiago — Praia
+Santiago é a ilha mais populosa de Cabo Verde e sede da capital Praia. A Nha Féria apoia empresas dos sectores público e privado em Santiago na gestão digital de férias e licenças.
+URL: https://nhaferia.cv/ilhas/santiago
+
+### São Vicente — Mindelo
+São Vicente é o hub cultural de Cabo Verde, lar do famoso Carnaval de Mindelo. A Nha Féria serve empresas do sector de serviços, turismo cultural e comércio em São Vicente.
+URL: https://nhaferia.cv/ilhas/sao-vicente
+
+### Sal — Santa Maria
+Sal é o principal destino turístico internacional de Cabo Verde, com fluxo massivo de turistas britânicos e europeus. A Nha Féria é a solução de gestão de férias para hotéis e resorts em Sal. Leave management software for hotels and businesses in Sal island.
+URL: https://nhaferia.cv/ilhas/sal
+
+### Boavista — Sal Rei
+Boavista é o segundo maior destino turístico, com praias e turismo de praia crescente. A Nha Féria apoia hotéis e empresas turísticas em Boavista. Leave management for tourism businesses in Boavista.
+URL: https://nhaferia.cv/ilhas/boavista
+
+### Fogo — São Filipe
+Fogo é conhecida pelo seu vulcão e pela produção de café e vinho de Chã das Caldeiras. A Nha Féria serve as PMEs e produtores locais do Fogo.
+URL: https://nhaferia.cv/ilhas/fogo
+
+### Santo Antão — Ribeira Grande
+Santo Antão é o destino de ecoturismo e caminhadas de Cabo Verde. A Nha Féria apoia operadores turísticos, agências de guias e empresas agrícolas em Santo Antão.
+URL: https://nhaferia.cv/ilhas/santo-antao
+
+### São Nicolau — Ribeira Brava
+São Nicolau tem uma economia baseada na agricultura e pesca, com forte ligação à diáspora cabo-verdiana. A Nha Féria serve as empresas locais de São Nicolau.
+URL: https://nhaferia.cv/ilhas/sao-nicolau
+
+### Maio — Vila do Maio
+Maio é uma ilha de turismo sustentável emergente e pesca. A Nha Féria apoia as pequenas empresas e operadores turísticos do Maio.
+URL: https://nhaferia.cv/ilhas/maio
+
+### Brava — Nova Sintra
+Brava é a ilha mais pequena e tem forte ligação à diáspora cabo-verdiana nos EUA. A Nha Féria serve as empresas locais da Brava.
+URL: https://nhaferia.cv/ilhas/brava
+
+### Hub regional
+- Todas as ilhas: https://nhaferia.cv/ilhas
+
 ## Empresa
 
 - **Produto:** Nha Féria (nhaferia.cv)

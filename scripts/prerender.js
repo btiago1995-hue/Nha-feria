@@ -36,6 +36,21 @@ const ROUTES = [
     title: 'Termos de Uso — Nha Féria',
     description: 'Termos e condições de uso da plataforma Nha Féria, software de gestão de férias e licenças para empresas em Cabo Verde.',
   },
+  {
+    path: '/ilhas',
+    out: 'dist/ilhas/index.html',
+    title: 'Gestão de Férias por Ilha em Cabo Verde — Nha Féria',
+    description: 'Software de gestão de férias para empresas em todas as ilhas de Cabo Verde. Santiago, São Vicente, Sal, Boavista e mais. Grátis até 5 colaboradores.',
+  },
+  { path: '/ilhas/santiago',    out: 'dist/ilhas/santiago/index.html',    title: 'Gestão de Férias em Santiago — Nha Féria',      description: 'Software de gestão de férias para empresas em Santiago e Praia. Conformidade com o Código Laboral de Cabo Verde. Grátis até 5 colaboradores.' },
+  { path: '/ilhas/sao-vicente', out: 'dist/ilhas/sao-vicente/index.html', title: 'Gestão de Férias em São Vicente — Nha Féria',   description: 'Software de gestão de férias para empresas em São Vicente e Mindelo. Pedidos online, aprovações e calendário em tempo real. Grátis até 5 colaboradores.' },
+  { path: '/ilhas/sal',         out: 'dist/ilhas/sal/index.html',         title: 'Gestão de Férias no Sal — Nha Féria',           description: 'Leave management software for hotels and businesses in Sal island, Cape Verde. Online requests, one-click approvals. Free up to 5 employees.' },
+  { path: '/ilhas/boavista',    out: 'dist/ilhas/boavista/index.html',    title: 'Gestão de Férias na Boavista — Nha Féria',      description: 'Leave management software for hotels and tourism businesses in Boavista, Cape Verde. Real-time team calendar. Free up to 5 employees.' },
+  { path: '/ilhas/fogo',        out: 'dist/ilhas/fogo/index.html',        title: 'Gestão de Férias no Fogo — Nha Féria',          description: 'Software de gestão de férias para empresas no Fogo e São Filipe. Conformidade com o Código Laboral. Grátis até 5 colaboradores.' },
+  { path: '/ilhas/santo-antao', out: 'dist/ilhas/santo-antao/index.html', title: 'Gestão de Férias em Santo Antão — Nha Féria',   description: 'Software de gestão de férias para empresas em Santo Antão. Feriados por ilha, calendário de equipa e conformidade legal. Grátis até 5 colaboradores.' },
+  { path: '/ilhas/sao-nicolau', out: 'dist/ilhas/sao-nicolau/index.html', title: 'Gestão de Férias em São Nicolau — Nha Féria',   description: 'Software de gestão de férias para empresas em São Nicolau. Pedidos online e aprovações com um clique. Grátis até 5 colaboradores.' },
+  { path: '/ilhas/maio',        out: 'dist/ilhas/maio/index.html',        title: 'Gestão de Férias no Maio — Nha Féria',          description: 'Software de gestão de férias para empresas no Maio. Calendário de equipa em tempo real e conformidade com a lei cabo-verdiana. Grátis até 5 colaboradores.' },
+  { path: '/ilhas/brava',       out: 'dist/ilhas/brava/index.html',       title: 'Gestão de Férias na Brava — Nha Féria',         description: 'Software de gestão de férias para empresas na Brava. Pedidos online, aprovações e saldo automático de férias. Grátis até 5 colaboradores.' },
 ];
 
 async function prerender() {
@@ -72,6 +87,12 @@ async function prerender() {
         output = output.replace(
           /(<meta name="description" content=")[^"]*(")/,
           `$1${route.description}$2`
+        );
+      }
+      if (route.path !== '/') {
+        output = output.replace(
+          /<link rel="canonical" href="[^"]*"\/>/,
+          `<link rel="canonical" href="https://nhaferia.cv${route.path}"/>`
         );
       }
 
