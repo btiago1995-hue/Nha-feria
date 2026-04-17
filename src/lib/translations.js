@@ -96,6 +96,7 @@ export const translations = {
       nextLeave: 'Próximas Férias',
       availabilityRate: 'Taxa de Disponibilidade',
       noUpcoming: 'Nenhuma próxima',
+      noPending: 'Sem pedidos pendentes.',
     },
     // Worker Leaves
     workerLeaves: {
@@ -272,6 +273,7 @@ export const translations = {
       nextLeave: 'Next Leave',
       availabilityRate: 'Availability Rate',
       noUpcoming: 'None upcoming',
+      noPending: 'No pending requests.',
     },
     workerLeaves: {
       title: 'My Leaves',

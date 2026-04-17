@@ -225,11 +225,9 @@ const DateRangePicker = ({ start, end, onChange, holidays = [], existingRequests
 
 const LegendItem = ({ color, label, dot }) => (
   <div className="flex items-center gap-1.5">
-    <span className="relative w-4 h-4 flex items-center justify-center flex-shrink-0">
-      {dot === 'corner'
-        ? <span className={`absolute top-0 right-0 w-2 h-2 rounded-full ${color}`} />
-        : dot === 'bottom'
-        ? <span className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-2 h-0.5 rounded-full ${color}`} />
+    <span className="flex-shrink-0 flex items-center justify-center w-3 h-3">
+      {dot === 'bottom'
+        ? <span className={`w-3 h-0.5 rounded-full ${color}`} />
         : <span className={`w-2 h-2 rounded-full ${color}`} />}
     </span>
     <span className="text-[11px] text-text-muted">{label}</span>

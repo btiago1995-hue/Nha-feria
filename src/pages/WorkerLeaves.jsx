@@ -167,9 +167,10 @@ const WorkerLeaves = () => {
   }, [profile]);
 
   const [cancelling, setCancelling] = useState(null); // id of request being cancelled
+  const [confirmingCancel, setConfirmingCancel] = useState(null); // id awaiting inline confirm
 
   const handleCancel = async (id) => {
-    if (!window.confirm('Tens a certeza que queres cancelar este pedido?')) return;
+    setConfirmingCancel(null);
     setCancelling(id);
     try {
       const { error } = await supabase
@@ -420,15 +421,29 @@ const WorkerLeaves = () => {
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {getStatusBadge(item.status)}
                     {item.status === 'pending' && (
-                      <button
-                        onClick={() => handleCancel(item.id)}
-                        disabled={cancelling === item.id}
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-danger transition-colors disabled:opacity-50 cursor-pointer"
-                      >
-                        {cancelling === item.id
-                          ? <span className="w-3.5 h-3.5 border border-slate-400 border-t-transparent rounded-full animate-spin" />
-                          : <XCircle size={14} />}
-                      </button>
+                      confirmingCancel === item.id ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] text-text-muted">Cancelar?</span>
+                          <button
+                            onClick={() => handleCancel(item.id)}
+                            className="text-[11px] font-semibold text-danger hover:underline cursor-pointer"
+                          >Sim</button>
+                          <button
+                            onClick={() => setConfirmingCancel(null)}
+                            className="text-[11px] font-semibold text-text-muted hover:underline cursor-pointer"
+                          >Não</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmingCancel(item.id)}
+                          disabled={cancelling === item.id}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-danger transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          {cancelling === item.id
+                            ? <span className="w-3.5 h-3.5 border border-slate-400 border-t-transparent rounded-full animate-spin" />
+                            : <XCircle size={14} />}
+                        </button>
+                      )
                     )}
                   </div>
                 </div>
@@ -459,16 +474,30 @@ const WorkerLeaves = () => {
                       <td className="px-5 py-4 text-center">{getStatusBadge(item.status)}</td>
                       <td className="px-4 py-4 text-right">
                         {item.status === 'pending' && (
-                          <button
-                            onClick={() => handleCancel(item.id)}
-                            disabled={cancelling === item.id}
-                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-danger transition-colors disabled:opacity-50 cursor-pointer"
-                          >
-                            {cancelling === item.id
-                              ? <span className="w-3.5 h-3.5 border border-slate-400 border-t-transparent rounded-full animate-spin" />
-                              : <XCircle size={14} />}
-                            Cancelar
-                          </button>
+                          confirmingCancel === item.id ? (
+                            <div className="inline-flex items-center gap-1.5">
+                              <span className="text-[11px] text-text-muted">Tens a certeza?</span>
+                              <button
+                                onClick={() => handleCancel(item.id)}
+                                className="text-[11px] font-semibold text-danger hover:underline cursor-pointer"
+                              >Sim</button>
+                              <button
+                                onClick={() => setConfirmingCancel(null)}
+                                className="text-[11px] font-semibold text-text-muted hover:underline cursor-pointer"
+                              >Não</button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmingCancel(item.id)}
+                              disabled={cancelling === item.id}
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 hover:text-danger transition-colors disabled:opacity-50 cursor-pointer"
+                            >
+                              {cancelling === item.id
+                                ? <span className="w-3.5 h-3.5 border border-slate-400 border-t-transparent rounded-full animate-spin" />
+                                : <XCircle size={14} />}
+                              Cancelar
+                            </button>
+                          )
                         )}
                       </td>
                     </tr>
