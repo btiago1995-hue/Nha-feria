@@ -946,6 +946,7 @@ const LandingPage = () => {
                 </a>
               ))}
               {[
+                { label: 'Blog',        to: '/blog'      },
                 { label: 'Privacidade', to: '/privacy'   },
                 { label: 'Termos',      to: '/terms'     },
                 { label: 'Contacto',    to: '/contacto'  },

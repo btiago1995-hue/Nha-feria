@@ -24,6 +24,8 @@ import SetupCompany from './pages/SetupCompany';
 import ManagerRequests from './pages/ManagerRequests';
 import IlhasHubPage from './pages/IlhasHubPage';
 import IlhaSpokePage from './pages/IlhaSpokePage';
+import BlogPage from './pages/BlogPage';
+import BlogPostPage from './pages/BlogPostPage';
 
 // Redirects authenticated users straight to dashboard, skipping the landing page
 function RootRedirect() {
@@ -62,6 +64,8 @@ function App() {
         <Route path="/setup-company" element={<SetupCompany />} />
         <Route path="/ilhas" element={<IlhasHubPage />} />
         <Route path="/ilhas/:ilha" element={<IlhaSpokePage />} />
+        <Route path="/blog" element={<BlogPage />} />
+        <Route path="/blog/:slug" element={<BlogPostPage />} />
 
         {/* Protected Routes */}
         <Route element={<MainLayout />}>

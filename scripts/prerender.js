@@ -51,6 +51,18 @@ const ROUTES = [
   { path: '/ilhas/sao-nicolau', out: 'dist/ilhas/sao-nicolau/index.html', title: 'Gestão de Férias em São Nicolau — Nha Féria',   description: 'Software de gestão de férias para empresas em São Nicolau. Pedidos online e aprovações com um clique. Grátis até 5 colaboradores.' },
   { path: '/ilhas/maio',        out: 'dist/ilhas/maio/index.html',        title: 'Gestão de Férias no Maio — Nha Féria',          description: 'Software de gestão de férias para empresas no Maio. Calendário de equipa em tempo real e conformidade com a lei cabo-verdiana. Grátis até 5 colaboradores.' },
   { path: '/ilhas/brava',       out: 'dist/ilhas/brava/index.html',       title: 'Gestão de Férias na Brava — Nha Féria',         description: 'Software de gestão de férias para empresas na Brava. Pedidos online, aprovações e saldo automático de férias. Grátis até 5 colaboradores.' },
+  {
+    path: '/blog',
+    out: 'dist/blog/index.html',
+    title: 'Blog — Gestão de RH e Férias em Cabo Verde | Nha Féria',
+    description: 'Guias sobre gestão de férias, Código Laboral de Cabo Verde e melhores práticas de RH para empresas cabo-verdianas.',
+  },
+  { path: '/blog/gestao-ferias-cabo-verde', out: 'dist/blog/gestao-ferias-cabo-verde/index.html', title: 'Gestão de Férias em Cabo Verde: Guia Completo — Nha Féria', description: 'Guia completo sobre gestão de férias para empresas em Cabo Verde. Código Laboral, feriados por ilha e software de gestão.' },
+  { path: '/blog/codigo-laboral-cabo-verde-ferias', out: 'dist/blog/codigo-laboral-cabo-verde-ferias/index.html', title: 'Código Laboral de Cabo Verde: Direito a Férias — Nha Féria', description: 'Tudo sobre o direito a férias no Código Laboral de Cabo Verde (Lei n.º 41/VIII/2013): 22 dias úteis, feriados e obrigações legais.' },
+  { path: '/blog/gestao-ferias-empresas-praia-santiago', out: 'dist/blog/gestao-ferias-empresas-praia-santiago/index.html', title: 'Gestão de Férias para Empresas em Praia, Santiago — Nha Féria', description: 'Como gerir férias e licenças na capital de Cabo Verde. Soluções digitais para PMEs em Praia e Santiago.' },
+  { path: '/blog/software-rh-mindelo-sao-vicente', out: 'dist/blog/software-rh-mindelo-sao-vicente/index.html', title: 'Software de RH para Empresas em Mindelo, São Vicente — Nha Féria', description: 'Software de gestão de férias para empresas em Mindelo e São Vicente. Sazonalidade do Carnaval e gestão de equipas.' },
+  { path: '/blog/ferias-hoteis-turismo-sal-boavista', out: 'dist/blog/ferias-hoteis-turismo-sal-boavista/index.html', title: 'Gestão de Férias em Hotéis no Sal e Boavista — Nha Féria', description: 'Leave management for hotels and resorts in Sal and Boavista, Cape Verde. Manage seasonal staff and holiday requests easily.' },
+  { path: '/blog/ferias-equipas-distribuidas-ilhas-cabo-verde', out: 'dist/blog/ferias-equipas-distribuidas-ilhas-cabo-verde/index.html', title: 'Férias com Equipas Distribuídas pelas Ilhas — Nha Féria', description: 'Como gerir férias de colaboradores distribuídos pelas ilhas de Cabo Verde. Feriados por ilha, visibilidade e aprovação à distância.' },
 ];
 
 async function prerender() {
